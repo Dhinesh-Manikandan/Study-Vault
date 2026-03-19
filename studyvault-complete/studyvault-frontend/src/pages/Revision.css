@@ -1,0 +1,41 @@
+.rv-header { margin-bottom: 1.6rem; }
+.rv-title { font-family: 'Instrument Serif', serif; font-size: 1.55rem; font-weight: 400; }
+.rv-title span { color: var(--accent); font-style: italic; }
+.rv-sub { font-size: 0.78rem; color: var(--text3); margin-top: 0.2rem; }
+
+.section { margin-bottom: 1.8rem; }
+.sec-label { font-size: 0.83rem; font-weight: 700; margin-bottom: 0.85rem; }
+
+.pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.7rem; }
+.pack-card { padding: 1rem; border-left: 3px solid var(--accent); }
+.pack-name  { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.25rem; }
+.pack-date  { font-size: 0.72rem; color: var(--text3); margin-bottom: 0.5rem; }
+.pack-items { font-size: 0.72rem; color: var(--text2); }
+
+.fc-area { padding: 1.6rem; max-width: 520px; }
+.fc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+.fc-label { font-size: 0.68rem; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.fc-scores { display: flex; gap: 0.75rem; font-size: 0.72rem; }
+
+.fc-question { font-family: 'Instrument Serif', serif; font-size: 1.15rem; line-height: 1.55; color: var(--text); margin-bottom: 1.2rem; }
+
+.fc-answer { padding: 0.6rem 0.95rem; border-radius: 8px; background: var(--surface2); border: 1px dashed var(--border2); font-size: 0.8rem; color: var(--text2); line-height: 1.6; margin-bottom: 1.2rem; min-height: 52px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.fc-answer.revealed { background: var(--accent-light); border-color: var(--accent); color: var(--text); justify-content: flex-start; }
+
+.fc-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; color: var(--blue); margin-bottom: 1.1rem; text-decoration: none; }
+.fc-link:hover { text-decoration: underline; }
+
+.fc-btns { display: flex; gap: 0.45rem; margin-bottom: 1rem; }
+.fc-btn  { flex: 1; padding: 0.5rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--border); cursor: pointer; transition: all 0.12s; }
+.fc-hard { background: var(--red-bg);   color: var(--red);   border-color: #fecaca; }
+.fc-ok   { background: var(--blue-bg);  color: var(--blue);  border-color: #bfdbfe; }
+.fc-easy { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+.fc-hard:hover { background: #fee2e2; }
+.fc-ok:hover   { background: #dbeafe; }
+.fc-easy:hover { background: #dcfce7; }
+
+.fc-progress { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.fc-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+
+.fc-done { padding: 2rem; text-align: center; max-width: 360px; }
+.fc-done h3 { font-size: 1.1rem; font-weight: 700; }
