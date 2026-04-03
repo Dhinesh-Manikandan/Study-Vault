@@ -37,9 +37,27 @@
 .list-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; }
 .list-meta { flex: 1; min-width: 0; }
 .list-name   { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.list-detail { font-size: 0.68rem; color: var(--text3); margin-top: 0.06rem; }
+.item-star-inline { color: #f59e0b; font-size: 0.76rem; margin-left: 0.32rem; vertical-align: middle; }
+.list-detail { font-size: 0.75rem; color: var(--text3); margin-top: 0.06rem; line-height: 1.55; }
 .list-url    { color: var(--blue); }
+.note-preview { font-size: 0.92rem; color: var(--text); font-weight: 500; }
 .list-tags   { display: flex; gap: 0.3rem; margin-top: 0.28rem; flex-wrap: wrap; }
+.item-tag-toggle {
+	appearance: none;
+	cursor: pointer;
+	opacity: 0.55;
+	transition: opacity 0.12s, transform 0.12s;
+}
+
+.item-tag-toggle.selected {
+	opacity: 1;
+}
+
+.item-tag-toggle:hover {
+	opacity: 1;
+	transform: translateY(-1px);
+}
+
 .list-actions { display: flex; gap: 0.32rem; opacity: 0; transition: opacity 0.15s; }
 .list-item:hover .list-actions { opacity: 1; }
 .action-btn  { width: 26px; height: 26px; border-radius: 5px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; cursor: pointer; color: var(--text3); transition: all 0.12s; }

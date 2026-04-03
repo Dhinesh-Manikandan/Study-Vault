@@ -1,12 +1,21 @@
 package com.studyvault.controller;
 
-import com.studyvault.service.FolderService;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.studyvault.service.FolderService;
 
 @RestController
 @RequestMapping("/api/folders")
@@ -37,7 +46,12 @@ public class FolderController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFolder(Authentication auth, @PathVariable Long id) {
-        folderService.deleteFolder(auth.getName(), id);
-        return ResponseEntity.ok(Map.of("message", "Folder deleted"));
+        try {
+            folderService.deleteFolder(auth.getName(), id);
+            return ResponseEntity.ok(Map.of("message", "Folder deleted"));
+        } catch (ResponseStatusException ex) {
+            String message = ex.getReason() != null ? ex.getReason() : "Failed to delete folder";
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
+        }
     }
 }

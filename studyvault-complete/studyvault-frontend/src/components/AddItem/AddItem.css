@@ -73,8 +73,59 @@
 
 .tag-row { display: flex; flex-wrap: wrap; gap: 0.32rem; }
 
+.tag-help {
+  font-size: 0.66rem;
+  color: var(--text3);
+  margin-bottom: 0.42rem;
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.selected-tag {
+  appearance: none;
+  background: var(--surface2);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.26rem 0.62rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.selected-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.selected-tag-label {
+  line-height: 1;
+}
+
+.selected-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 0.55rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .tag-opt {
-  padding: 0.23rem 0.7rem;
+  appearance: none;
+  padding: 0.23rem 0.68rem;
   border-radius: 10px;
   border: 1px solid var(--border);
   font-size: 0.68rem;
@@ -82,10 +133,23 @@
   cursor: pointer;
   transition: all 0.12s;
   color: var(--text3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
 }
 .tag-opt:hover        { border-color: var(--accent); color: var(--accent); }
+.tag-opt.selected { border-style: solid; }
 .tag-opt.tag-important { background: #fef3c7; color: #92400e; border-color: #fde68a; }
 .tag-opt.tag-confusing { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 .tag-opt.tag-revision  { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+.tag-opt.selected {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 8px 18px rgba(0, 0, 0, 0.04);
+}
+.tag-remove {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
 
 .modal-footer { display: flex; gap: 0.45rem; justify-content: flex-end; margin-top: 1.4rem; }

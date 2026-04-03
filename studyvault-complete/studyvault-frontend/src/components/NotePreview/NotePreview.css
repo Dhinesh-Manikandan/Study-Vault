@@ -1,0 +1,50 @@
+.note-preview-block {
+  margin-top: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface2);
+  padding: 0.6rem 0.75rem;
+  transition: all 0.15s ease;
+  user-select: text;
+}
+
+.note-preview-block.collapsed {
+  cursor: pointer;
+}
+
+.note-preview-block:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+}
+
+.note-preview-text {
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--text2);
+  white-space: pre-wrap;
+}
+
+.note-preview-block.collapsed .note-preview-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.note-preview-block.expanded .note-preview-text {
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.note-preview-action {
+  margin-top: 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.note-preview-block.expanded .note-preview-action {
+  color: var(--text3);
+}

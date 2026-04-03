@@ -12,7 +12,9 @@
 .search-result { padding: 0.82rem 0.95rem; display: flex; align-items: flex-start; gap: 0.8rem; cursor: pointer; transition: all 0.15s; }
 .search-result:hover { border-color: var(--accent); }
 .result-icon { font-size: 1.25rem; margin-top: 0.1rem; flex-shrink: 0; }
-.result-name { font-size: 0.83rem; font-weight: 600; margin-bottom: 0.12rem; }
+.result-name { font-size: 0.83rem; font-weight: 600; margin-bottom: 0.12rem; display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.result-star { color: #f59e0b; font-size: 0.78rem; }
 .result-name mark { background: var(--accent-light); color: var(--accent-hover); border-radius: 2px; padding: 0 2px; }
 .result-path { font-size: 0.68rem; color: var(--text3); }
-.result-snippet { font-size: 0.73rem; color: var(--text2); margin-top: 0.28rem; line-height: 1.5; }
+.result-snippet { font-size: 0.82rem; color: var(--text2); margin-top: 0.28rem; line-height: 1.6; }
+.note-snippet { font-size: 0.94rem; color: var(--text); font-weight: 500; }

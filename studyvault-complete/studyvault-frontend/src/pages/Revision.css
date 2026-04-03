@@ -18,6 +18,28 @@
 .fc-scores { display: flex; gap: 0.75rem; font-size: 0.72rem; }
 
 .fc-question { font-family: 'Instrument Serif', serif; font-size: 1.15rem; line-height: 1.55; color: var(--text); margin-bottom: 1.2rem; }
+.fc-note-title { display: flex; align-items: center; gap: 0.35rem; }
+.fc-note-badge { color: #f59e0b; font-size: 0.85rem; }
+
+.revision-list { display: flex; flex-direction: column; gap: 0.7rem; }
+
+.revision-card { padding: 1rem 1.05rem; }
+
+.revision-card-top { display: flex; justify-content: space-between; gap: 0.8rem; align-items: flex-start; margin-bottom: 0.65rem; }
+
+.revision-title-row { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+
+.revision-title { font-family: 'Instrument Serif', serif; font-size: 1.08rem; line-height: 1.35; color: var(--text); }
+
+.revision-badge { font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.45rem; border-radius: 999px; background: var(--accent-light); color: var(--accent); }
+
+.revision-kind { font-size: 0.68rem; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+
+.revision-content { font-size: 0.94rem; line-height: 1.75; color: var(--text2); white-space: pre-wrap; margin-bottom: 0.7rem; }
+
+.note-content { font-size: 1rem; color: var(--text); }
+
+.revision-tags { display: flex; flex-wrap: wrap; gap: 0.28rem; margin-top: 0.3rem; }
 
 .fc-answer { padding: 0.6rem 0.95rem; border-radius: 8px; background: var(--surface2); border: 1px dashed var(--border2); font-size: 0.8rem; color: var(--text2); line-height: 1.6; margin-bottom: 1.2rem; min-height: 52px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .fc-answer.revealed { background: var(--accent-light); border-color: var(--accent); color: var(--text); justify-content: flex-start; }

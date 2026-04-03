@@ -1,7 +1,9 @@
 // SearchPage.js
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
-import { searchItems } from '../services/api';
+import NotePreview from '../components/NotePreview/NotePreview';
+import { searchItems, openItemFile, openNoteItem } from '../services/api';
 import './Search.css';
 
 const TYPE_META = {
@@ -92,17 +94,27 @@ export default function SearchPage() {
                     <div
                       className="search-result card"
                       key={item.id}
-                      onClick={() => item.url && window.open(item.url, '_blank')}
+                      onClick={() => {
+                        if (item.type === 'NOTE') {
+                          openNoteItem(item);
+                          return;
+                        }
+                        if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
+                        else if (item.fileUrl) openItemFile(item.id).catch(() => toast.error('Failed to open file'));
+                      }}
                     >
                       <div className="result-icon">{meta.icon}</div>
                       <div>
-                        <div className="result-name"
-                          dangerouslySetInnerHTML={{ __html: highlight(item.title) }} />
+                        <div className="result-name">
+                          <span dangerouslySetInnerHTML={{ __html: highlight(item.title) }} />
+                          {item.starred && <span className="result-star">★</span>}
+                        </div>
                         <div className="result-path">
                           {item.folderPath} · <span className={`type-badge ${meta.cls}`}>{meta.label}</span>
                           {item.starred && ' · ⭐'}
                         </div>
-                        {item.notes && <div className="result-snippet">{item.notes}</div>}
+                        {item.type === 'NOTE' && item.content && <NotePreview text={item.content} className="search-note-preview" label="note content" />}
+                        {item.notes && <NotePreview text={item.notes} className="search-note-preview" label="personal note" />}
                       </div>
                     </div>
                   );

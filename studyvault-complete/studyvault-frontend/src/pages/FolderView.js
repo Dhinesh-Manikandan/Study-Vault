@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
-import { getFolders, getItems, deleteItem, toggleStar, createFolder, deleteFolder } from '../services/api';
+import NotePreview from '../components/NotePreview/NotePreview';
+import { getFolders, getItems, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags } from '../services/api';
 import './FolderView.css';
 
 const TYPE_META = {
@@ -15,6 +16,7 @@ const TYPE_META = {
 };
 
 const FILTERS = ['All', 'YouTube', 'PDF', 'Image', 'Link', 'Note', 'Starred'];
+const ITEM_TAGS = ['important', 'confusing', 'revision'];
 
 export default function FolderView() {
   const { id } = useParams();
@@ -29,19 +31,60 @@ export default function FolderView() {
   const [newSubName,  setNewSubName]  = useState('');
   const [allFolders,  setAllFolders]  = useState([]);
   const [loading,     setLoading]     = useState(true);
+  const lastLoadToastRef = useRef({ key: '', at: 0 });
 
   const load = async () => {
+    const folderIdNum = Number(id);
+    if (!Number.isFinite(folderIdNum)) {
+      toast.error('Invalid folder link');
+      navigate('/');
+      return;
+    }
+
     setLoading(true);
-    try {
-      const [all, its] = await Promise.all([getFolders(null), getItems(id)]);
-      // Find current folder from flat list
-      const flat = flattenFolders(all);
-      const cur  = flat.find(f => String(f.id) === String(id));
-      setFolder(cur);
-      setSubfolders(cur?.children || []);
-      setItems(its);
-      setAllFolders(flat.map(f => ({ id: f.id, name: f.name, path: f.path || f.name })));
-    } catch { toast.error('Failed to load folder'); }
+    const [foldersResult, itemsResult] = await Promise.allSettled([
+      getFolders(null),
+      getItems(folderIdNum),
+    ]);
+
+    let all = [];
+    let its = [];
+
+    if (foldersResult.status === 'fulfilled') {
+      all = Array.isArray(foldersResult.value) ? foldersResult.value : [];
+    }
+
+    if (itemsResult.status === 'fulfilled') {
+      its = Array.isArray(itemsResult.value) ? itemsResult.value : [];
+    }
+
+    const flat = flattenFolders(all);
+    const cur  = flat.find(f => String(f.id) === String(folderIdNum));
+    setFolder(cur || null);
+    setSubfolders(cur?.children || []);
+    setItems(its);
+    setAllFolders(flat.map(f => ({ id: f.id, name: f.name, path: f.path || f.name })));
+
+    if (foldersResult.status === 'rejected' && itemsResult.status === 'rejected') {
+      const message = foldersResult.reason?.response?.data?.message
+        || itemsResult.reason?.response?.data?.message
+        || 'Failed to load folder';
+      const toastKey = `${folderIdNum}:${message}`;
+      const now = Date.now();
+      if (lastLoadToastRef.current.key !== toastKey || now - lastLoadToastRef.current.at > 1000) {
+        lastLoadToastRef.current = { key: toastKey, at: now };
+        toast.error(message);
+      }
+    } else if (!cur && foldersResult.status === 'fulfilled') {
+      const toastKey = `${folderIdNum}:missing`;
+      const now = Date.now();
+      if (lastLoadToastRef.current.key !== toastKey || now - lastLoadToastRef.current.at > 1000) {
+        lastLoadToastRef.current = { key: toastKey, at: now };
+        toast.error('Folder not found or access denied');
+      }
+      navigate('/');
+    }
+
     setLoading(false);
   };
 
@@ -56,12 +99,34 @@ export default function FolderView() {
   const handleDeleteItem = async (itemId) => {
     if (!window.confirm('Delete this item?')) return;
     try { await deleteItem(itemId); toast.success('Deleted'); load(); }
-    catch { toast.error('Failed to delete'); }
+    catch (error) {
+      const message = error?.response?.data?.message || 'Failed to delete';
+      toast.error(message);
+    }
   };
 
   const handleToggleStar = async (itemId) => {
     try { await toggleStar(itemId); load(); }
-    catch { toast.error('Failed'); }
+    catch (error) {
+      const message = error?.response?.data?.message || 'Failed';
+      toast.error(message);
+    }
+  };
+
+  const handleToggleTag = async (item, tag) => {
+    const currentTags = Array.isArray(item.tags) ? item.tags : [];
+    const hasTag = currentTags.includes(tag);
+    const nextTags = hasTag
+      ? currentTags.filter(t => t !== tag)
+      : [...currentTags, tag];
+
+    try {
+      const updated = await updateItemTags(item.id, nextTags);
+      setItems(prev => prev.map(existing => existing.id === item.id ? { ...existing, tags: updated.tags || [] } : existing));
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update tag';
+      toast.error(message);
+    }
   };
 
   const handleCreateSub = async () => {
@@ -72,7 +137,20 @@ export default function FolderView() {
       setShowNewSub(false);
       setNewSubName('');
       load();
-    } catch { toast.error('Failed'); }
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed';
+      toast.error(message);
+    }
+  };
+
+  const safeHostname = (value) => {
+    if (!value) return null;
+    try {
+      const normalized = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+      return new URL(normalized).hostname;
+    } catch {
+      return null;
+    }
   };
 
   const handleDeleteFolder = async (folderId, isCurrent = false) => {
@@ -85,8 +163,9 @@ export default function FolderView() {
         return;
       }
       load();
-    } catch {
-      toast.error('Failed to delete folder');
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to delete folder';
+      toast.error(message);
     }
   };
 
@@ -97,8 +176,17 @@ export default function FolderView() {
   });
 
   const openItem = (item) => {
-    const urlToOpen = item.url || item.fileUrl;
-    if (urlToOpen) window.open(urlToOpen, '_blank');
+    if (item.type === 'NOTE') {
+      openNoteItem(item);
+      return;
+    }
+    if (item.url) {
+      window.open(item.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (item.fileUrl) {
+      openItemFile(item.id).catch(() => toast.error('Failed to open file'));
+    }
   };
 
   // Build breadcrumb
@@ -190,25 +278,42 @@ export default function FolderView() {
                 <div className="list-item card" key={item.id} onClick={() => openItem(item)}>
                   <div className="list-icon" style={{ background: meta.bg }}>{meta.icon}</div>
                   <div className="list-meta">
-                    <div className="list-name">{item.title}</div>
+                    <div className="list-name">
+                      {item.title}
+                      {item.starred && <span className="item-star-inline">★</span>}
+                    </div>
                     <div className="list-detail">
                       {meta.label}
-                      {item.url && <> · <span className="list-url">{new URL(item.url).hostname}</span></>}
-                      {item.notes && <> · {item.notes}</>}
+                      {item.url && safeHostname(item.url) && <> · <span className="list-url">{safeHostname(item.url)}</span></>}
+                      {item.type === 'NOTE' && item.content && <NotePreview text={item.content} label="note content" />}
+                      {item.notes && <NotePreview text={item.notes} label="personal note" />}
                     </div>
                     <div className="list-tags">
-                      {item.tags?.map(t => (
-                        <span key={t} className={`tag tag-${t}`}>#{t}</span>
-                      ))}
+                      {ITEM_TAGS.map(tag => {
+                        const selected = (item.tags || []).includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            className={`tag tag-${tag} item-tag-toggle ${selected ? 'selected' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleTag(item, tag);
+                            }}
+                            title={`${selected ? 'Remove' : 'Add'} #${tag}`}
+                          >
+                            #{tag}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="list-actions" onClick={e => e.stopPropagation()}>
                     <button
-                      className="action-btn"
+                      className={`action-btn ${item.starred ? 'starred' : ''}`}
                       title="Star"
                       onClick={() => handleToggleStar(item.id)}
-                      style={item.starred ? { color: '#f59e0b', borderColor: '#fde68a', background: '#fef3c7' } : {}}
-                    >⭐</button>
+                    >{item.starred ? '⭐' : '☆'}</button>
                     <button className="action-btn" title="Delete" onClick={() => handleDeleteItem(item.id)}>🗑</button>
                   </div>
                 </div>

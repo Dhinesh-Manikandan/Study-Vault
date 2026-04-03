@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
-import { getStarredItems, toggleStar } from '../services/api';
+import NotePreview from '../components/NotePreview/NotePreview';
+import { getStarredItems, toggleStar, openItemFile, openNoteItem } from '../services/api';
 import toast from 'react-hot-toast';
 
 const TYPE_META = {
@@ -59,16 +60,28 @@ export default function StarredPage() {
                   key={item.id}
                   className="card"
                   style={{ padding: '0.72rem 0.95rem', display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }}
-                  onClick={() => item.url && window.open(item.url, '_blank')}
+                  onClick={() => {
+                    if (item.type === 'NOTE') {
+                      openNoteItem(item);
+                      return;
+                    }
+                    if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
+                    else if (item.fileUrl) openItemFile(item.id).catch(() => toast.error('Failed to open file'));
+                  }}
                 >
                   <div style={{ width: 32, height: 32, borderRadius: 7, background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', flexShrink: 0 }}>
                     {meta.icon}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <span>{item.title}</span>
+                      <span style={{ color: '#f59e0b', fontSize: '0.78rem' }}>★</span>
+                    </div>
                     <div style={{ fontSize: '0.68rem', color: 'var(--text3)', marginTop: '0.06rem' }}>
                       {item.folderPath} · <span className={`type-badge ${meta.cls}`}>{meta.label}</span>
                     </div>
+                    {item.type === 'NOTE' && item.content && <NotePreview text={item.content} className="starred-note-preview" label="note content" />}
+                    {item.notes && <NotePreview text={item.notes} className="starred-note-preview" label="personal note" />}
                   </div>
                   <button
                     style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 5, width: 26, height: 26, cursor: 'pointer', color: '#f59e0b', fontSize: '0.72rem' }}

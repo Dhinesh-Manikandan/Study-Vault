@@ -49,7 +49,8 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
       onSaved?.();
       onClose();
     } catch (e) {
-      toast.error('Failed to save. Try again.');
+      const message = e?.response?.data?.message || 'Failed to save. Try again.';
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -114,11 +115,11 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
             <label className="upload-zone">
               <span className="upload-icon">☁️</span>
               <span className="upload-text">{file ? file.name : 'Click to choose file'}</span>
-              <span className="upload-sub">{type === 'PDF' ? 'PDF, DOC, DOCX, PPT' : 'JPG, PNG, HEIC'}</span>
+              <span className="upload-sub">{type === 'PDF' ? 'PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX' : 'JPG, PNG, HEIC'}</span>
               <input
                 type="file"
                 hidden
-                accept={type === 'PDF' ? '.pdf,.doc,.docx,.ppt,.pptx' : 'image/*'}
+                accept={type === 'PDF' ? '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx' : 'image/*'}
                 onChange={e => setFile(e.target.files[0])}
               />
             </label>
@@ -157,15 +158,36 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
         {/* Tags */}
         <div className="form-group">
           <label>Tags</label>
+          <div className="tag-help">Click a tag to add or remove it.</div>
+          {tags.length > 0 && (
+            <div className="selected-tags">
+              {tags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`selected-tag tag-${tag}`}
+                  onClick={() => toggleTag(tag)}
+                  title={`Remove #${tag}`}
+                >
+                  <span className="selected-tag-label">#{tag}</span>
+                  <span className="selected-tag-remove">Remove</span>
+                </button>
+              ))}
+            </div>
+          )}
           <div className="tag-row">
             {TAGS.map(t => (
-              <div
+              <button
                 key={t}
-                className={`tag-opt ${tags.includes(t) ? `tag-${t}` : ''}`}
+                type="button"
+                className={`tag-opt ${tags.includes(t) ? `tag-${t} selected` : ''}`}
                 onClick={() => toggleTag(t)}
+                aria-pressed={tags.includes(t)}
+                title={tags.includes(t) ? `Remove #${t}` : `Add #${t}`}
               >
-                #{t}
-              </div>
+                <span>#{t}</span>
+                {tags.includes(t) && <span className="tag-remove">remove</span>}
+              </button>
             ))}
           </div>
         </div>

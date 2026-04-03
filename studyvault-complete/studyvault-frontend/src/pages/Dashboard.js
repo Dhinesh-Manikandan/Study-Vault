@@ -85,8 +85,9 @@ export default function Dashboard() {
       await deleteFolder(id);
       toast.success('Folder deleted');
       load();
-    } catch {
-      toast.error('Failed to delete folder');
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to delete folder';
+      toast.error(message);
     }
   };
 
@@ -101,10 +102,16 @@ export default function Dashboard() {
     return              { bg: '#f0fdf4', text: '#166534', bar: '#22c55e', lbl: '#16a34a' };
   };
 
-  const flatFolders = folders.flatMap(f => [
-    { id: f.id, name: f.name, path: f.name },
-    ...(f.children || []).map(c => ({ id: c.id, name: c.name, path: `${f.name} › ${c.name}` })),
-  ]);
+  const flattenFolders = (nodes, parentPath = '') =>
+    nodes.flatMap(node => {
+      const path = parentPath ? `${parentPath} › ${node.name}` : node.name;
+      return [
+        { id: node.id, name: node.name, path },
+        ...flattenFolders(node.children || [], path),
+      ];
+    });
+
+  const flatFolders = flattenFolders(folders);
 
   return (
     <div className="app-layout">

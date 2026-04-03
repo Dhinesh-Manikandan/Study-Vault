@@ -24,7 +24,9 @@ api.interceptors.request.use(async (config) => {
 
 // ── Folders ──────────────────────────────────────────
 export const getFolders = (parentId = null) =>
-  api.get('/folders', { params: { parentId } }).then(r => r.data);
+  api.get('/folders', {
+    params: parentId == null ? {} : { parentId },
+  }).then(r => r.data);
 
 export const createFolder = (data) =>
   api.post('/folders', data).then(r => r.data);
@@ -37,13 +39,18 @@ export const deleteFolder = (id) =>
 
 // ── Items ─────────────────────────────────────────────
 export const getItems = (folderId) =>
-  api.get('/items', { params: { folderId } }).then(r => r.data);
+  api.get('/items', {
+    params: { folderId: Number(folderId) },
+  }).then(r => r.data);
 
 export const getRecentItems = () =>
   api.get('/items/recent').then(r => r.data);
 
 export const getStarredItems = () =>
   api.get('/items/starred').then(r => r.data);
+
+export const getRevisionItems = () =>
+  api.get('/items/revision').then(r => r.data);
 
 export const createItem = (data) =>
   api.post('/items', data).then(r => r.data);
@@ -61,6 +68,110 @@ export const deleteItem = (id) =>
 
 export const toggleStar = (id) =>
   api.patch(`/items/${id}/star`).then(r => r.data);
+
+export const updateItemTags = (id, tags) =>
+  api.patch(`/items/${id}/tags`, { tags }).then(r => r.data);
+
+export const openItemFile = async (id) => {
+  const response = await api.get(`/items/${id}/download`, { responseType: 'blob' });
+  const blobUrl = URL.createObjectURL(response.data);
+  window.open(blobUrl, '_blank', 'noopener,noreferrer');
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+};
+
+const escapeHtml = (value = '') =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+export const openNoteItem = (item) => {
+  const noteBody = item?.content || item?.notes || 'No note content available.';
+  const noteWindow = window.open('', '_blank', 'noopener,noreferrer');
+  if (!noteWindow) {
+    return;
+  }
+
+  const safeTitle = escapeHtml(item?.title || 'Note');
+  const safeBody = escapeHtml(noteBody).replace(/\n/g, '<br>');
+  noteWindow.document.open();
+  noteWindow.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${safeTitle}</title>
+        <style>
+          :root {
+            color-scheme: light;
+            --bg: #fffdf7;
+            --panel: #fff7e6;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #d97706;
+            --border: #f3d08a;
+          }
+          body {
+            margin: 0;
+            font-family: Georgia, 'Times New Roman', serif;
+            background: linear-gradient(180deg, #fffaf0 0%, #fffdf7 100%);
+            color: var(--text);
+          }
+          .wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 28px 20px 40px;
+          }
+          .card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(180, 120, 20, 0.12);
+            padding: 28px;
+          }
+          .eyebrow {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 10px;
+          }
+          h1 {
+            margin: 0 0 18px;
+            font-size: clamp(1.8rem, 4vw, 2.7rem);
+            line-height: 1.15;
+          }
+          .note-body {
+            font-size: clamp(1.08rem, 2vw, 1.32rem);
+            line-height: 1.8;
+            white-space: normal;
+            word-break: break-word;
+          }
+          .meta {
+            margin-top: 18px;
+            font-size: 0.82rem;
+            color: var(--muted);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="wrap">
+          <div class="card">
+            <div class="eyebrow">Note</div>
+            <h1>${safeTitle}</h1>
+            <div class="note-body">${safeBody}</div>
+            <div class="meta">Open notes are rendered larger for easier reading.</div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+  noteWindow.document.close();
+};
 
 // ── Search ────────────────────────────────────────────
 export const searchItems = (query, type = null) =>

@@ -1,11 +1,17 @@
 package com.studyvault.service;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.studyvault.entity.Folder;
 import com.studyvault.repository.FolderRepository;
 import com.studyvault.repository.ItemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.util.*;
 
 @Service
 public class FolderService {
@@ -27,7 +33,7 @@ public class FolderService {
         Map<String, Object> node = new LinkedHashMap<>();
         node.put("id",        f.getId());
         node.put("name",      f.getName());
-        node.put("itemCount", itemRepo.countByUserId(userId)); // simplified
+        node.put("itemCount", itemRepo.countByUserIdAndFolderId(userId, f.getId()));
         List<Map<String,Object>> children = folderRepo
             .findByUserIdAndParentIdOrderByCreatedAtAsc(userId, f.getId())
             .stream().map(c -> buildNode(c, userId)).toList();
@@ -41,14 +47,21 @@ public class FolderService {
         folder.setName(name);
         folder.setUserId(userId);
         if (parentId != null) {
-            folderRepo.findById(parentId).ifPresent(folder::setParent);
+            folderRepo.findById(parentId)
+                .filter(parent -> userId.equals(parent.getUserId()))
+                .ifPresent(folder::setParent);
         }
         return folderRepo.save(folder);
     }
 
     public void deleteFolder(String userId, Long id) {
-        folderRepo.findById(id).ifPresent(f -> {
-            if (f.getUserId().equals(userId)) folderRepo.delete(f);
-        });
+        Folder folder = folderRepo.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
+
+        if (!folder.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to delete this folder");
+        }
+
+        folderRepo.delete(folder);
     }
 }
