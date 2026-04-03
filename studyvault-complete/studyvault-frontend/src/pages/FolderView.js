@@ -18,6 +18,13 @@ const TYPE_META = {
 const FILTERS = ['All', 'YouTube', 'PDF', 'Image', 'Link', 'Note', 'Starred'];
 const ITEM_TAGS = ['important', 'confusing', 'revision'];
 
+function flattenFolders(folders, parent = null) {
+  return folders.flatMap(f => [
+    { ...f, parentName: parent, path: parent ? `${parent} › ${f.name}` : f.name },
+    ...flattenFolders(f.children || [], f.name),
+  ]);
+}
+
 export default function FolderView() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -89,12 +96,6 @@ export default function FolderView() {
   }, [id, navigate]);
 
   useEffect(() => { load(); }, [load]);
-
-  const flattenFolders = (folders, parent = null) =>
-    folders.flatMap(f => [
-      { ...f, parentName: parent, path: parent ? `${parent} › ${f.name}` : f.name },
-      ...flattenFolders(f.children || [], f.name),
-    ]);
 
   const handleDeleteItem = async (itemId) => {
     if (!window.confirm('Delete this item?')) return;
