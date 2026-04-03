@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
@@ -33,7 +33,7 @@ export default function FolderView() {
   const [loading,     setLoading]     = useState(true);
   const lastLoadToastRef = useRef({ key: '', at: 0 });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const folderIdNum = Number(id);
     if (!Number.isFinite(folderIdNum)) {
       toast.error('Invalid folder link');
@@ -86,9 +86,9 @@ export default function FolderView() {
     }
 
     setLoading(false);
-  };
+  }, [id, navigate]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const flattenFolders = (folders, parent = null) =>
     folders.flatMap(f => [
