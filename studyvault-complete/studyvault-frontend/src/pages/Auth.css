@@ -1,5 +1,6 @@
-.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 1rem; }
-.auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; max-width: 380px; box-shadow: var(--shadow-md); }
+.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(145deg, color-mix(in srgb, var(--bg) 82%, #ffffff 18%) 0%, color-mix(in srgb, var(--accent-light) 55%, #ffffff 45%) 100%); padding: 1rem; position: relative; overflow: hidden; }
+.auth-page::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at top left, rgba(217, 119, 6, 0.18), transparent 28%), radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 30%); pointer-events: none; }
+.auth-card { position: relative; z-index: 1; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--border) 65%, #ffffff 35%); border-radius: 20px; padding: 2rem; width: 100%; max-width: 420px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12); }
 .auth-logo { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
 .auth-logo-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
 .auth-logo-text { font-family: 'Instrument Serif', serif; font-size: 1.2rem; }

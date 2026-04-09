@@ -48,6 +48,7 @@
 .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.7rem; }
 .item-card  { padding: 0.85rem; cursor: pointer; position: relative; }
 .item-card:hover { transform: translateY(-1px); border-color: var(--border2); }
+.item-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .item-star  { position: absolute; top: 8px; right: 10px; color: #f59e0b; font-size: 0.8rem; }
 .item-name  { font-size: 0.79rem; font-weight: 600; margin: 0.4rem 0 0.25rem; line-height: 1.35; }
 .item-path  { font-size: 0.66rem; color: var(--text3); }

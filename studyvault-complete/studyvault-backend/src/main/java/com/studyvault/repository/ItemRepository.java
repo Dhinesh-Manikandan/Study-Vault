@@ -12,6 +12,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findByUserIdAndFolderIdOrderByCreatedAtDesc(String userId, Long folderId);
 
+       List<Item> findByUserIdAndFolderIdInOrderByCreatedAtDesc(String userId, List<Long> folderIds);
+
        long countByUserIdAndFolderId(String userId, Long folderId);
 
        boolean existsByUserIdAndFolderIdAndTitleIgnoreCase(String userId, Long folderId, String title);
@@ -19,6 +21,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByUserIdAndStarredTrueOrderByCreatedAtDesc(String userId);
 
        List<Item> findByUserIdOrderByCreatedAtDesc(String userId);
+
+               List<Item> findByUserIdAndTypeOrderByCreatedAtDesc(String userId, Item.Type type);
 
        @Query("SELECT DISTINCT i FROM Item i JOIN i.tags t WHERE i.userId = :userId AND LOWER(t) = LOWER(:tag) ORDER BY i.createdAt DESC")
        List<Item> findByUserIdAndTagOrderByCreatedAtDesc(@Param("userId") String userId,
@@ -28,12 +32,14 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT i FROM Item i WHERE i.userId = :userId AND " +
            "(LOWER(i.title) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
-           " LOWER(i.notes) LIKE LOWER(CONCAT('%', :q, '%')))")
+           " LOWER(i.notes) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           " LOWER(i.content) LIKE LOWER(CONCAT('%', :q, '%')))")
     List<Item> search(@Param("userId") String userId, @Param("q") String query);
 
     @Query("SELECT i FROM Item i WHERE i.userId = :userId AND i.type = :type AND " +
            "(LOWER(i.title) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
-           " LOWER(i.notes) LIKE LOWER(CONCAT('%', :q, '%')))")
+           " LOWER(i.notes) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           " LOWER(i.content) LIKE LOWER(CONCAT('%', :q, '%')))")
     List<Item> searchByType(@Param("userId") String userId, @Param("q") String query,
                             @Param("type") Item.Type type);
 

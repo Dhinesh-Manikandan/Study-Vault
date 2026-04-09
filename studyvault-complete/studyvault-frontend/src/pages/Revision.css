@@ -21,25 +21,129 @@
 .fc-note-title { display: flex; align-items: center; gap: 0.35rem; }
 .fc-note-badge { color: #f59e0b; font-size: 0.85rem; }
 
-.revision-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.revision-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.8rem;
+}
 
-.revision-card { padding: 1rem 1.05rem; }
+.revision-card {
+  position: relative;
+  padding: 0.85rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border2) 80%, var(--accent) 20%);
+  background: linear-gradient(155deg, var(--surface) 0%, color-mix(in srgb, var(--surface2) 85%, #ffffff 15%) 100%);
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
 
-.revision-card-top { display: flex; justify-content: space-between; gap: 0.8rem; align-items: flex-start; margin-bottom: 0.65rem; }
+.revision-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  pointer-events: none;
+  background: radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.11), transparent 48%);
+}
 
-.revision-title-row { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.revision-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.09);
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border2) 50%);
+}
 
-.revision-title { font-family: 'Instrument Serif', serif; font-size: 1.08rem; line-height: 1.35; color: var(--text); }
+.revision-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
 
-.revision-badge { font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.45rem; border-radius: 999px; background: var(--accent-light); color: var(--accent); }
+.revision-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+  margin-bottom: 0.42rem;
+  min-height: 2.4em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
-.revision-kind { font-size: 0.68rem; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.revision-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.18rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-light) 85%, #ffffff 15%);
+  color: var(--accent);
+  white-space: nowrap;
+}
 
-.revision-content { font-size: 0.94rem; line-height: 1.75; color: var(--text2); white-space: pre-wrap; margin-bottom: 0.7rem; }
+.revision-kind {
+  font-size: 0.61rem;
+  color: var(--text3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: color-mix(in srgb, var(--surface2) 70%, #ffffff 30%);
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  padding: 0.16rem 0.44rem;
+}
 
-.note-content { font-size: 1rem; color: var(--text); }
+.revision-note-preview .note-preview-block {
+  margin-top: 0.28rem;
+  padding: 0.5rem 0.58rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface2) 82%, #ffffff 18%);
+}
 
-.revision-tags { display: flex; flex-wrap: wrap; gap: 0.28rem; margin-top: 0.3rem; }
+.revision-note-preview .note-preview-text {
+  font-size: 0.77rem;
+  line-height: 1.5;
+}
+
+.revision-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-top: 0.58rem;
+}
+
+.revision-open-btn {
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border2) 55%);
+  background: color-mix(in srgb, var(--accent-light) 65%, #ffffff 35%);
+  color: var(--accent);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: 999px;
+  padding: 0.24rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.revision-open-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  filter: saturate(1.05);
+}
+
+.revision-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.24rem;
+}
+
+@media (max-width: 700px) {
+  .revision-grid { grid-template-columns: 1fr; }
+}
 
 .fc-answer { padding: 0.6rem 0.95rem; border-radius: 8px; background: var(--surface2); border: 1px dashed var(--border2); font-size: 0.8rem; color: var(--text2); line-height: 1.6; margin-bottom: 1.2rem; min-height: 52px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .fc-answer.revealed { background: var(--accent-light); border-color: var(--accent); color: var(--text); justify-content: flex-start; }

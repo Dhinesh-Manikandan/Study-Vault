@@ -2,24 +2,32 @@ package com.studyvault.controller;
 
 import com.studyvault.entity.Exam;
 import com.studyvault.repository.ExamRepository;
-import com.studyvault.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/exams")
-class ExamController {
+public class ExamController {
 
     @Autowired ExamRepository examRepo;
 
     @GetMapping
     public ResponseEntity<?> getExams(Authentication auth) {
-        return ResponseEntity.ok(examRepo.findByUserIdOrderByExamDateAsc(auth.getName()));
+        return ResponseEntity.ok(
+            examRepo.findByUserIdAndExamDateGreaterThanEqualOrderByExamDateAsc(auth.getName(), LocalDate.now())
+        );
     }
 
     @PostMapping
@@ -39,17 +47,5 @@ class ExamController {
             if (e.getUserId().equals(auth.getName())) examRepo.delete(e);
         });
         return ResponseEntity.ok(Map.of("message", "Deleted"));
-    }
-}
-
-@RestController
-@RequestMapping("/api/stats")
-class StatsController {
-
-    @Autowired ItemService itemService;
-
-    @GetMapping
-    public ResponseEntity<?> getStats(Authentication auth) {
-        return ResponseEntity.ok(itemService.getStats(auth.getName()));
     }
 }

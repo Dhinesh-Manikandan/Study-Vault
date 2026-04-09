@@ -12,6 +12,12 @@ const TYPES = [
 ];
 
 const TAGS = ['important', 'confusing', 'revision'];
+const MAX_NOTE_WORDS = 2000;
+
+const countWords = (text = '') => {
+  const trimmed = text.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+};
 
 export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
   const [type, setType]       = useState('YOUTUBE');
@@ -30,6 +36,20 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
   const handleSubmit = async () => {
     if (!title.trim()) return toast.error('Please add a title');
     if (!folder)       return toast.error('Please select a folder');
+
+    if (needsUrl && !url.trim()) {
+      return toast.error('Please add a valid URL');
+    }
+
+    const contentWordCount = countWords(content);
+    if (needsContent && contentWordCount > MAX_NOTE_WORDS) {
+      return toast.error(`Note content cannot exceed ${MAX_NOTE_WORDS} words`);
+    }
+
+    const personalNoteWordCount = countWords(notes);
+    if (personalNoteWordCount > MAX_NOTE_WORDS) {
+      return toast.error(`Personal note cannot exceed ${MAX_NOTE_WORDS} words`);
+    }
 
     setSaving(true);
     try {
@@ -137,6 +157,7 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
               onChange={e => setContent(e.target.value)}
               style={{ resize: 'vertical' }}
             />
+            <div className="tag-help">{countWords(content)} / {MAX_NOTE_WORDS} words</div>
           </div>
         )}
 

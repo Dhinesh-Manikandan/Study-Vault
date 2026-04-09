@@ -5,6 +5,7 @@
 .search-big { width: 100%; background: var(--surface); border: 1.5px solid var(--border2); border-radius: 12px; padding: 0.82rem 1rem; font-size: 0.95rem; color: var(--text); outline: none; box-shadow: var(--shadow-md); margin-bottom: 0.9rem; transition: border-color 0.15s; }
 .search-big:focus { border-color: var(--accent); }
 .filter-row { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+.tag-filter-row { margin-top: -0.8rem; margin-bottom: 1.2rem; }
 .filter-chip { padding: 0.28rem 0.75rem; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font-size: 0.71rem; font-weight: 500; cursor: pointer; transition: all 0.12s; }
 .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
 .filter-chip.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); font-weight: 600; }

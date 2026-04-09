@@ -1,6 +1,7 @@
 package com.studyvault.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,8 +24,13 @@ public class Item {
     @Column(nullable = false)
     private String title;
 
+    @Column(length = 2048)
     private String url;           // for YouTube, LINK
+
+    @Column(length = 2048)
     private String fileUrl;       // for PDF, IMAGE (Cloudinary URL)
+
+    @Column(columnDefinition = "TEXT")
     private String content;       // for NOTE
 
     @Enumerated(EnumType.STRING)
@@ -46,6 +52,7 @@ public class Item {
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
 
+    @Column(columnDefinition = "TEXT")
     private String notes;         // personal note about the item
 
     @Column(updatable = false)
@@ -60,5 +67,25 @@ public class Item {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @JsonProperty("folderId")
+    public Long getFolderIdentifier() {
+        return folder != null ? folder.getId() : null;
+    }
+
+    @JsonProperty("folderPath")
+    public String getFolderLocation() {
+        if (folder == null) {
+            return null;
+        }
+
+        List<String> names = new ArrayList<>();
+        Folder current = folder;
+        while (current != null) {
+            names.add(0, current.getName());
+            current = current.getParent();
+        }
+        return String.join(" › ", names);
     }
 }

@@ -20,7 +20,7 @@ export default function Sidebar() {
 
   const isActive = (path) => location.pathname === path;
 
-  const initials = user?.email?.slice(0, 2).toUpperCase() || 'ME';
+  const initials = (user?.username || user?.email || 'me').slice(0, 2).toUpperCase();
 
   return (
     <aside className="sidebar">
@@ -38,6 +38,7 @@ export default function Sidebar() {
           { icon: '🔍', label: 'Search',    path: '/search' },
           { icon: '⭐', label: 'Starred',   path: '/starred' },
           { icon: '🎯', label: 'Revision',  path: '/revision' },
+          { icon: '👤', label: 'Profile',   path: '/profile' },
         ].map(item => (
           <div
             key={item.path}
@@ -76,9 +77,10 @@ export default function Sidebar() {
       <div className="sidebar-user">
         <div className="sidebar-avatar">{initials}</div>
         <div className="sidebar-user-info">
-          <div className="sidebar-user-name">{user?.email?.split('@')[0]}</div>
+          <div className="sidebar-user-name">{user?.username || user?.email?.split('@')[0]}</div>
           <div className="sidebar-user-sub">CSE Student</div>
         </div>
+        <button className="sidebar-signout" onClick={() => navigate('/profile')} title="Profile">👤</button>
         <button className="sidebar-signout" onClick={signOut} title="Sign out">↩</button>
       </div>
     </aside>

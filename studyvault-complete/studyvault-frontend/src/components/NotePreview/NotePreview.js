@@ -11,12 +11,13 @@ export default function NotePreview({ text, className = '', collapsedChars = 220
 
   if (!content) return null;
 
-  const isLong = content.length > collapsedChars;
-  const preview = expanded || !isLong ? content : `${content.slice(0, collapsedChars).trimEnd()}...`;
+  const lineCount = content.split(/\r?\n/).length;
+  const isLong = content.length > collapsedChars || lineCount > 3;
+  const isCollapsed = isLong && !expanded;
 
   return (
     <div
-      className={`note-preview-block ${expanded ? 'expanded' : 'collapsed'} ${className}`.trim()}
+      className={`note-preview-block ${isCollapsed ? 'collapsed' : 'expanded'} ${className}`.trim()}
       onClick={(e) => {
         e.stopPropagation();
         if (isLong) setExpanded(prev => !prev);
@@ -34,7 +35,7 @@ export default function NotePreview({ text, className = '', collapsedChars = 220
       title={isLong ? `${expanded ? 'Hide' : 'Show'} full ${label.toLowerCase()}` : undefined}
       aria-expanded={isLong ? expanded : undefined}
     >
-      <div className="note-preview-text">{preview}</div>
+      <div className="note-preview-text">{content}</div>
       {isLong && (
         <div className="note-preview-action">
           {expanded ? 'Show less' : 'Click to expand'}

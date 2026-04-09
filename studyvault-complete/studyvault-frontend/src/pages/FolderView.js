@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getFolders, getItems, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags } from '../services/api';
+import { getFolders, getItems, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision } from '../services/api';
 import './FolderView.css';
 
 const TYPE_META = {
@@ -18,11 +18,14 @@ const TYPE_META = {
 const FILTERS = ['All', 'YouTube', 'PDF', 'Image', 'Link', 'Note', 'Starred'];
 const ITEM_TAGS = ['important', 'confusing', 'revision'];
 
-function flattenFolders(folders, parent = null) {
-  return folders.flatMap(f => [
-    { ...f, parentName: parent, path: parent ? `${parent} › ${f.name}` : f.name },
-    ...flattenFolders(f.children || [], f.name),
-  ]);
+function flattenFolders(folders, parentPath = '') {
+  return folders.flatMap(f => {
+    const path = parentPath ? `${parentPath} › ${f.name}` : f.name;
+    return [
+      { ...f, path },
+      ...flattenFolders(f.children || [], path),
+    ];
+  });
 }
 
 export default function FolderView() {
@@ -130,6 +133,22 @@ export default function FolderView() {
     }
   };
 
+  const handleFolderRevision = async (enabled) => {
+    try {
+      const result = await updateFolderRevision(id, enabled);
+      const count = Number(result?.updatedCount || 0);
+      toast.success(
+        enabled
+          ? `Added #revision to ${count} item${count === 1 ? '' : 's'}`
+          : `Removed #revision from ${count} item${count === 1 ? '' : 's'}`
+      );
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update folder revision';
+      toast.error(message);
+    }
+  };
+
   const handleCreateSub = async () => {
     if (!newSubName.trim()) return;
     try {
@@ -193,6 +212,11 @@ export default function FolderView() {
   // Build breadcrumb
   const crumbs = folder?.path?.split(' › ') || [];
 
+  const getBreadcrumbTarget = (index) => {
+    const breadcrumbPath = crumbs.slice(0, index + 1).join(' › ');
+    return allFolders.find(f => f.path === breadcrumbPath) || null;
+  };
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -200,11 +224,26 @@ export default function FolderView() {
 
         {/* Breadcrumb */}
         <div className="breadcrumb">
-          <span className="crumb" onClick={() => navigate('/')}>Home</span>
+          <button type="button" className="crumb crumb-btn" onClick={() => navigate('/')}>Home</button>
           {crumbs.map((c, i) => (
             <React.Fragment key={i}>
               <span className="sep">›</span>
-              <span className={`crumb ${i === crumbs.length - 1 ? 'cur' : ''}`}>{c}</span>
+              {i === crumbs.length - 1 ? (
+                <span className="crumb cur">{c}</span>
+              ) : (
+                <button
+                  type="button"
+                  className="crumb crumb-btn"
+                  onClick={() => {
+                    const target = getBreadcrumbTarget(i);
+                    if (target?.id) {
+                      navigate(`/folder/${target.id}`);
+                    }
+                  }}
+                >
+                  {c}
+                </button>
+              )}
             </React.Fragment>
           ))}
         </div>
@@ -216,6 +255,8 @@ export default function FolderView() {
             <p className="folder-sub">{subfolders.length} sub-folders · {items.length} items</p>
           </div>
           <div className="folder-actions">
+            <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(true)}>🎯 Mark All Revision</button>
+            <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(false)}>↩ Remove Revision</button>
             <button className="btn btn-danger" onClick={() => handleDeleteFolder(id, true)}>🗑 Delete Folder</button>
             <button className="btn btn-ghost" onClick={() => setShowNewSub(true)}>📁 New Sub-folder</button>
             <button className="btn btn-primary" onClick={() => setShowAdd(true)}>＋ Add Item</button>

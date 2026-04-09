@@ -15,20 +15,22 @@ const TYPE_META = {
 };
 
 const FILTERS = ['All', 'YouTube', 'PDF', 'Image', 'Link', 'Note'];
+const TAG_FILTERS = ['All Tags', 'important', 'confusing', 'revision'];
 
 export default function SearchPage() {
   const [query,   setQuery]   = useState('');
   const [filter,  setFilter]  = useState('All');
+  const [tagFilter, setTagFilter] = useState('All Tags');
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading]  = useState(false);
 
-  const doSearch = async (q = query, f = filter) => {
-    if (!q.trim()) return;
+  const doSearch = async (q = query, f = filter, tf = tagFilter) => {
     setLoading(true);
     try {
       const type = f === 'All' ? null : f.toUpperCase();
-      const data = await searchItems(q, type);
+      const tag = tf === 'All Tags' ? null : tf;
+      const data = await searchItems(q.trim(), type, tag);
       setResults(data);
       setSearched(true);
     } catch { setResults([]); }
@@ -67,8 +69,24 @@ export default function SearchPage() {
               <div
                 key={f}
                 className={`filter-chip ${filter === f ? 'active' : ''}`}
-                onClick={() => { setFilter(f); doSearch(query, f); }}
+                onClick={() => {
+                  setFilter(f);
+                  doSearch(query, f, tagFilter);
+                }}
               >{f}</div>
+            ))}
+          </div>
+
+          <div className="filter-row tag-filter-row">
+            {TAG_FILTERS.map(t => (
+              <div
+                key={t}
+                className={`filter-chip ${tagFilter === t ? 'active' : ''}`}
+                onClick={() => {
+                  setTagFilter(t);
+                  doSearch(query, filter, t);
+                }}
+              >#{t}</div>
             ))}
           </div>
 
@@ -85,7 +103,8 @@ export default function SearchPage() {
           {!loading && results.length > 0 && (
             <>
               <div style={{ fontSize: '0.7rem', color: 'var(--text3)', marginBottom: '0.7rem' }}>
-                {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
+                {results.length} result{results.length !== 1 ? 's' : ''}
+                {query.trim() ? ` for "${query}"` : ''}
               </div>
               <div className="search-results">
                 {results.map(item => {

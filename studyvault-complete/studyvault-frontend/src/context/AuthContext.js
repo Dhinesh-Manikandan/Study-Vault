@@ -1,52 +1,79 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../services/supabase';
+import api, { getStoredAuthToken, setStoredAuthToken } from '../services/api';
 
 const AuthContext = createContext({});
-const devBypassAuth = process.env.REACT_APP_DEV_BYPASS_AUTH === 'true';
-const devUserId = process.env.REACT_APP_DEV_USER_ID || 'dev-user';
+
+const normalizeUser = (user) => ({
+  id: user?.id,
+  username: user?.username || user?.email || '',
+  email: user?.email || user?.username || '',
+  displayName: user?.displayName || user?.username || user?.email || '',
+  user_metadata: { full_name: user?.displayName || user?.username || user?.email || '' },
+});
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (devBypassAuth) {
-      setUser({ id: devUserId, email: `${devUserId}@local.dev` });
-      setLoading(false);
-      return;
-    }
+    const bootstrap = async () => {
+      const token = getStoredAuthToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+      try {
+        const response = await api.get('/auth/me');
+        setUser(normalizeUser(response.data));
+      } catch {
+        setStoredAuthToken(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    bootstrap();
   }, []);
 
-  const signUp = (email, password) =>
-    devBypassAuth
-      ? Promise.resolve({ data: { user: { id: devUserId, email } }, error: null })
-      : supabase.auth.signUp({ email, password });
+  const signUp = async (username, password) => {
+    const response = await api.post('/auth/signup', { username, password });
+    const { token, user: createdUser } = response.data;
+    setStoredAuthToken(token);
+    const normalizedUser = normalizeUser(createdUser);
+    setUser(normalizedUser);
+    return { data: { user: normalizedUser }, error: null };
+  };
 
-  const signIn = (email, password) =>
-    devBypassAuth
-      ? Promise.resolve({ data: { user: { id: devUserId, email } }, error: null })
-      : supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (username, password) => {
+    const response = await api.post('/auth/login', { username, password });
+    const { token, user: signedInUser } = response.data;
+    setStoredAuthToken(token);
+    const normalizedUser = normalizeUser(signedInUser);
+    setUser(normalizedUser);
+    return { data: { user: normalizedUser }, error: null };
+  };
 
-  const signOut = () =>
-    devBypassAuth
-      ? Promise.resolve({ error: null })
-      : supabase.auth.signOut();
+  const signOut = async () => {
+    setStoredAuthToken(null);
+    setUser(null);
+    return { error: null };
+  };
+
+  const updateCredentials = async (payload) => {
+    const response = await api.patch('/auth/me', payload);
+    const { token, user: updatedUser } = response.data;
+    if (token) {
+      setStoredAuthToken(token);
+    }
+    const normalizedUser = normalizeUser(updatedUser);
+    setUser(normalizedUser);
+    return { data: { user: normalizedUser }, error: null };
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, updateCredentials }}>
       {children}
     </AuthContext.Provider>
   );

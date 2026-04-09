@@ -3,15 +3,19 @@ package com.studyvault.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.HashMap;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +41,8 @@ public class ItemService {
     private static final Set<String> DOC_EXTENSIONS = Set.of("pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx");
     private static final Set<String> IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif", "heic", "heif");
     private static final Set<String> ALLOWED_TAGS = Set.of("important", "confusing", "revision");
+    private static final int MAX_NOTE_WORDS = 2000;
+    private static final int MAX_URL_LENGTH = 2048;
 
     @Autowired private ItemRepository itemRepo;
     @Autowired private FolderRepository folderRepo;
@@ -62,9 +68,38 @@ public class ItemService {
             .toList();
     }
 
-    public List<Item> search(String userId, String query, Item.Type type) {
-        if (type != null) return itemRepo.searchByType(userId, query, type);
-        return itemRepo.search(userId, query);
+    public List<Item> search(String userId, String query, Item.Type type, String tag) {
+        String normalizedQuery = query == null ? "" : query.trim();
+        String normalizedTag = normalizeTag(tag);
+        if (!ALLOWED_TAGS.contains(normalizedTag)) {
+            normalizedTag = "";
+        }
+
+        List<Item> base;
+        if (normalizedQuery.isEmpty()) {
+            if (type != null) {
+                base = itemRepo.findByUserIdAndTypeOrderByCreatedAtDesc(userId, type);
+            } else {
+                base = itemRepo.findByUserIdOrderByCreatedAtDesc(userId);
+            }
+        } else {
+            if (type != null) {
+                base = itemRepo.searchByType(userId, normalizedQuery, type);
+            } else {
+                base = itemRepo.search(userId, normalizedQuery);
+            }
+        }
+
+        if (normalizedTag.isEmpty()) {
+            return base;
+        }
+
+        String tagToMatch = normalizedTag;
+        return base.stream()
+            .filter(item -> item.getTags() != null && item.getTags().stream()
+                .map(this::normalizeTag)
+                .anyMatch(tagToMatch::equals))
+            .toList();
     }
 
     public Item createItem(String userId, Map<String, Object> body) {
@@ -95,9 +130,15 @@ public class ItemService {
 
         Item item = new Item();
         item.setTitle(title);
-        item.setUrl((String) body.get("url"));
-        item.setContent((String) body.get("content"));
-        item.setNotes((String) body.get("notes"));
+        String normalizedUrl = normalizeUrl((String) body.get("url"));
+        String content = normalizeText((String) body.get("content"));
+        String notes = normalizeText((String) body.get("notes"));
+
+        validateItemPayload(itemType, normalizedUrl, content, notes);
+
+        item.setUrl(normalizedUrl);
+        item.setContent(content);
+        item.setNotes(notes);
         item.setUserId(userId);
         item.setType(itemType);
 
@@ -165,7 +206,9 @@ public class ItemService {
         item.setType(type);
         item.setUserId(userId);
         item.setTags(normalizeTags(tags));
-        item.setNotes(notes);
+        String normalizedNotes = normalizeText(notes);
+        validateWordLimit(normalizedNotes, "Personal note");
+        item.setNotes(normalizedNotes);
 
         Folder folder = folderRepo.findById(folderId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
@@ -215,6 +258,53 @@ public class ItemService {
 
         item.setTags(normalizeTags(tags));
         return itemRepo.save(item);
+    }
+
+    public Map<String, Object> updateFolderRevisionTags(String userId, Long folderId, boolean enabled) {
+        Folder folder = folderRepo.findById(folderId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
+
+        if (!userId.equals(folder.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot update this folder");
+        }
+
+        List<Long> folderIds = collectFolderIds(userId, folderId);
+        List<Item> items = itemRepo.findByUserIdAndFolderIdInOrderByCreatedAtDesc(userId, folderIds);
+
+        List<Item> changedItems = new ArrayList<>();
+        for (Item item : items) {
+            List<String> existingTags = item.getTags() == null ? List.of() : item.getTags();
+            LinkedHashSet<String> nextTags = new LinkedHashSet<>();
+
+            for (String rawTag : existingTags) {
+                String normalized = normalizeTag(rawTag);
+                if (!normalized.isEmpty() && ALLOWED_TAGS.contains(normalized)) {
+                    nextTags.add(normalized);
+                }
+            }
+
+            boolean changed;
+            if (enabled) {
+                changed = nextTags.add("revision");
+            } else {
+                changed = nextTags.remove("revision");
+            }
+
+            if (changed) {
+                item.setTags(new ArrayList<>(nextTags));
+                changedItems.add(item);
+            }
+        }
+
+        if (!changedItems.isEmpty()) {
+            itemRepo.saveAll(changedItems);
+        }
+
+        return Map.of(
+            "folderId", folderId,
+            "revisionEnabled", enabled,
+            "updatedCount", changedItems.size()
+        );
     }
 
     public void deleteItem(String userId, Long id) {
@@ -306,6 +396,30 @@ public class ItemService {
         return tag;
     }
 
+    private List<Long> collectFolderIds(String userId, Long rootFolderId) {
+        Map<Long, List<Long>> childrenByParent = new HashMap<>();
+        for (Folder current : folderRepo.findByUserIdOrderByCreatedAtAsc(userId)) {
+            Long parentId = current.getParent() != null ? current.getParent().getId() : null;
+            childrenByParent.computeIfAbsent(parentId, key -> new ArrayList<>()).add(current.getId());
+        }
+
+        List<Long> collected = new ArrayList<>();
+        Deque<Long> pending = new ArrayDeque<>();
+        pending.push(rootFolderId);
+
+        while (!pending.isEmpty()) {
+            Long currentId = pending.pop();
+            collected.add(currentId);
+
+            List<Long> children = childrenByParent.getOrDefault(currentId, List.of());
+            for (Long childId : children) {
+                pending.push(childId);
+            }
+        }
+
+        return collected;
+    }
+
     private String resolveDownloadUrl(String sourceUrl) {
         if (!isCloudinaryUrl(sourceUrl)) {
             return sourceUrl;
@@ -321,6 +435,72 @@ public class ItemService {
                 .generate(assetRef.publicId());
         } catch (IOException | RuntimeException ex) {
             return sourceUrl;
+        }
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeUrl(String rawUrl) {
+        String normalized = normalizeText(rawUrl);
+        if (normalized == null) {
+            return null;
+        }
+
+        if (!normalized.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*$")) {
+            normalized = "https://" + normalized;
+        }
+        return normalized;
+    }
+
+    private void validateItemPayload(Item.Type itemType, String url, String content, String notes) {
+        if ((itemType == Item.Type.LINK || itemType == Item.Type.YOUTUBE)) {
+            if (url == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL is required for this item type");
+            }
+            validateUrl(url);
+        }
+
+        if (itemType == Item.Type.NOTE) {
+            if (content == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Note content is required");
+            }
+            validateWordLimit(content, "Note content");
+        }
+
+        validateWordLimit(notes, "Personal note");
+    }
+
+    private void validateUrl(String url) {
+        if (url.length() > MAX_URL_LENGTH) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL is too long");
+        }
+
+        try {
+            URI uri = URI.create(url);
+            if (uri.getScheme() == null || uri.getHost() == null) {
+                throw new IllegalArgumentException("Invalid URL");
+            }
+        } catch (RuntimeException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enter a valid URL");
+        }
+    }
+
+    private void validateWordLimit(String text, String fieldName) {
+        if (text == null) {
+            return;
+        }
+
+        int wordCount = text.trim().isEmpty() ? 0 : text.trim().split("\\s+").length;
+        if (wordCount > MAX_NOTE_WORDS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                fieldName + " cannot exceed " + MAX_NOTE_WORDS + " words");
         }
     }
 

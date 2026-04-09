@@ -7,7 +7,7 @@ import './Auth.css';
 
 export function Login() {
   const { signIn } = useAuth();
-  const [email,    setEmail]    = useState('');
+  const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
 
@@ -15,12 +15,14 @@ export function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(identity, password);
       if (error) {
         toast.error(error.message);
+        return;
       }
+      toast.success('Signed in');
     } catch (err) {
-      toast.error('Network error: unable to reach Supabase. Check internet/firewall and try again.');
+      toast.error(err?.response?.data?.message || 'Unable to sign in');
     } finally {
       setLoading(false);
     }
@@ -34,15 +36,31 @@ export function Login() {
           <div className="auth-logo-text">Study<span>Vault</span></div>
         </div>
         <h1 className="auth-title">Welcome back</h1>
-        <p className="auth-sub">Sign in to your study vault</p>
+        <p className="auth-sub">Sign in with your username and password</p>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
-            <input className="form-input" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
+            <label>Username</label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Enter your username"
+              value={identity}
+              onChange={e => setIdentity(e.target.value)}
+              required
+              autoComplete="username"
+            />
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input className="form-input" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+            <input
+              className="form-input"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
           </div>
           <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
             {loading ? <span className="spinner" /> : 'Sign In'}
@@ -57,7 +75,7 @@ export function Login() {
 // Register.js
 export function Register() {
   const { signUp } = useAuth();
-  const [email,    setEmail]    = useState('');
+  const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
 
@@ -66,14 +84,14 @@ export function Register() {
     if (password.length < 6) return toast.error('Password must be at least 6 characters');
     setLoading(true);
     try {
-      const { error } = await signUp(email, password);
+      const { error } = await signUp(identity, password);
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success('Account created! Check your email to confirm.');
+        toast.success('Account created');
       }
     } catch (err) {
-      toast.error('Network error: unable to reach Supabase. Check internet/firewall and try again.');
+      toast.error(err?.response?.data?.message || 'Unable to create account');
     } finally {
       setLoading(false);
     }
@@ -87,15 +105,31 @@ export function Register() {
           <div className="auth-logo-text">Study<span>Vault</span></div>
         </div>
         <h1 className="auth-title">Create your vault</h1>
-        <p className="auth-sub">Start organising your study resources today</p>
+        <p className="auth-sub">Create a multi-user account for your study vault</p>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>College Email</label>
-            <input className="form-input" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
+            <label>Username</label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Choose a username"
+              value={identity}
+              onChange={e => setIdentity(e.target.value)}
+              required
+              autoComplete="username"
+            />
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input className="form-input" type="password" placeholder="Min. 6 characters" value={password} onChange={e => setPassword(e.target.value)} required />
+            <input
+              className="form-input"
+              type="password"
+              placeholder="Min. 6 characters"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+            />
           </div>
           <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
             {loading ? <span className="spinner" /> : 'Create Account'}

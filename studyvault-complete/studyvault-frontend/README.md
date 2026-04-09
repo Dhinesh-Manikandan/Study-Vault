@@ -7,19 +7,7 @@
 
 ## ⚠️ Still needed — 2 things to collect
 
-### 1. Database Password
-Go to: https://supabase.com/dashboard/project/migeuxqmrcwhstifeysn/settings/database
-→ Scroll to "Database password"
-→ Click "Reset database password" if you forgot it
-→ Copy and replace [YOUR-PASSWORD] in application.properties (2 places)
-
-### 2. JWT Secret
-Go to: https://supabase.com/dashboard/project/migeuxqmrcwhstifeysn/settings/api
-→ Scroll down to "JWT Settings"
-→ Copy "JWT Secret"
-→ Replace YOUR_SUPABASE_JWT_SECRET in application.properties
-
-### 3. Cloudinary (for file uploads)
+### 1. Cloudinary (for file uploads)
 Go to: https://cloudinary.com → Sign up free
 → Dashboard shows Cloud Name, API Key, API Secret
 → Replace the 3 cloudinary values in application.properties
@@ -38,7 +26,7 @@ Runs at http://localhost:8080
 ### Frontend
 ```bash
 cd studyvault-frontend
-# Copy .env.example to .env.local (already filled with your Supabase values)
+# Copy .env.example to .env.local
 copy .env.example .env.local
 npm install
 npm start
@@ -55,8 +43,6 @@ npm install -g vercel
 vercel
 ```
 In Vercel dashboard → add these env vars:
-- REACT_APP_SUPABASE_URL = https://migeuxqmrcwhstifeysn.supabase.co
-- REACT_APP_SUPABASE_ANON_KEY = eyJhbGci... (your anon key)
 - REACT_APP_API_URL = https://your-railway-backend.up.railway.app/api
 
 ## Deploy to Railway (Backend)

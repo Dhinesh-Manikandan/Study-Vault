@@ -1,23 +1,40 @@
 import axios from 'axios';
-import { supabase } from './supabase';
 
-const devBypassAuth = process.env.REACT_APP_DEV_BYPASS_AUTH === 'true';
-const devUserId = process.env.REACT_APP_DEV_USER_ID || 'dev-user';
+const authTokenKey = 'studyvault.auth.token';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
 });
 
-// Attach JWT token from Supabase to every request
+export const getStoredAuthToken = () =>
+  window.sessionStorage.getItem(authTokenKey);
+
+export const setStoredAuthToken = (token) => {
+  if (token) {
+    window.sessionStorage.setItem(authTokenKey, token);
+  } else {
+    window.sessionStorage.removeItem(authTokenKey);
+  }
+};
+
 api.interceptors.request.use(async (config) => {
-  if (devBypassAuth) {
-    config.headers.Authorization = `Bearer dev-bypass:${devUserId}`;
-    return config;
+  config.headers = {
+    ...config.headers,
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
+  };
+
+  if ((config.method || '').toLowerCase() === 'get') {
+    config.params = {
+      ...(config.params || {}),
+      _ts: Date.now(),
+    };
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`;
+  const token = getStoredAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -71,6 +88,9 @@ export const toggleStar = (id) =>
 
 export const updateItemTags = (id, tags) =>
   api.patch(`/items/${id}/tags`, { tags }).then(r => r.data);
+
+export const updateFolderRevision = (folderId, enabled) =>
+  api.patch(`/items/folders/${folderId}/revision`, { enabled }).then(r => r.data);
 
 export const openItemFile = async (id) => {
   const response = await api.get(`/items/${id}/download`, { responseType: 'blob' });
@@ -174,8 +194,8 @@ export const openNoteItem = (item) => {
 };
 
 // ── Search ────────────────────────────────────────────
-export const searchItems = (query, type = null) =>
-  api.get('/items/search', { params: { q: query, type } }).then(r => r.data);
+export const searchItems = (query = '', type = null, tag = null) =>
+  api.get('/items/search', { params: { q: query, type, tag } }).then(r => r.data);
 
 // ── Exams ─────────────────────────────────────────────
 export const getExams = () =>
@@ -186,6 +206,12 @@ export const createExam = (data) =>
 
 export const deleteExam = (id) =>
   api.delete(`/exams/${id}`);
+
+export const updateCredentials = (payload) =>
+  api.patch('/auth/me', payload).then(r => r.data);
+
+export const deleteAccountData = () =>
+  api.delete('/account').then(r => r.data);
 
 // ── Stats ─────────────────────────────────────────────
 export const getStats = () =>

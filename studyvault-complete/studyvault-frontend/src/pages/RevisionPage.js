@@ -50,47 +50,52 @@ export default function RevisionPage() {
               <p>Tag items with <strong>#revision</strong> to see them here</p>
             </div>
           ) : (
-            <div className="revision-list">
+            <div className="revision-grid">
               {revisionItems.map(item => {
                 const tagList = item.tags || [];
                 return (
                   <div className="revision-card card" key={item.id}>
                     <div className="revision-card-top">
-                      <div className="revision-title-row">
-                        <div className="revision-title">{item.title}</div>
-                        <span className="revision-badge">#revision</span>
-                      </div>
                       <div className="revision-kind">{item.type}</div>
+                      <span className="revision-badge">#revision</span>
                     </div>
 
-                    {item.type === 'NOTE' && item.content && <NotePreview text={item.content} className="revision-note-preview" label="note content" />}
+                    <div className="revision-title">{item.title}</div>
 
-                    {item.notes && <NotePreview text={item.notes} className="revision-note-preview" label="personal note" />}
-
-                    {(item.url || item.fileUrl) && (
-                      <button
-                        type="button"
-                        className="fc-link"
-                        onClick={() => {
-                          if (item.type === 'NOTE') {
-                            openNoteItem(item);
-                            return;
-                          }
-                          if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
-                          else if (item.fileUrl) openItemFile(item.id).catch(() => {});
-                        }}
-                      >
-                        🔗 Open item
-                      </button>
+                    {item.type === 'NOTE' && item.content && (
+                      <NotePreview text={item.content} className="revision-note-preview" label="note content" />
                     )}
 
-                    {tagList.length > 0 && (
-                      <div className="revision-tags">
-                        {tagList.map(tag => (
-                          <span key={tag} className={`tag tag-${tag}`}>#{tag}</span>
-                        ))}
-                      </div>
+                    {item.notes && (
+                      <NotePreview text={item.notes} className="revision-note-preview" label="personal note" />
                     )}
+
+                    <div className="revision-card-footer">
+                      {(item.url || item.fileUrl) && (
+                        <button
+                          type="button"
+                          className="revision-open-btn"
+                          onClick={() => {
+                            if (item.type === 'NOTE') {
+                              openNoteItem(item);
+                              return;
+                            }
+                            if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer');
+                            else if (item.fileUrl) openItemFile(item.id).catch(() => {});
+                          }}
+                        >
+                          Open
+                        </button>
+                      )}
+
+                      {tagList.length > 0 && (
+                        <div className="revision-tags">
+                          {tagList.map(tag => (
+                            <span key={tag} className={`tag tag-${tag}`}>#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}

@@ -16,6 +16,8 @@ const TYPE_META = {
   NOTE:    { icon: '✏️', label: 'Note',    cls: 'badge-note'    },
 };
 
+const RECENT_LIMIT = 6;
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -76,6 +78,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteExam = async (id) => {
+    if (!window.confirm('Delete this exam?')) return;
     try { await deleteExam(id); load(); } catch { toast.error('Failed'); }
   };
 
@@ -247,10 +250,28 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="items-grid">
-              {recent.map(item => {
+              {recent.slice(0, RECENT_LIMIT).map(item => {
                 const meta = TYPE_META[item.type] || TYPE_META.LINK;
                 return (
-                  <div className="item-card card" key={item.id}>
+                  <div
+                    className="item-card card"
+                    key={item.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      if (item.folderId) {
+                        navigate(`/folder/${item.folderId}`);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (item.folderId) {
+                          navigate(`/folder/${item.folderId}`);
+                        }
+                      }
+                    }}
+                  >
                     {item.starred && <span className="item-star">★</span>}
                     <span className={`type-badge ${meta.cls}`}>{meta.icon} {meta.label}</span>
                     <div className="item-name">{item.title}</div>

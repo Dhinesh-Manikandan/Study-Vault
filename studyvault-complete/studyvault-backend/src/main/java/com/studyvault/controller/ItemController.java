@@ -52,13 +52,14 @@ public class ItemController {
 
     @GetMapping("/search")
     public ResponseEntity<?> search(Authentication auth,
-                                    @RequestParam String q,
-                                    @RequestParam(required = false) String type) {
+                                    @RequestParam(required = false) String q,
+                                    @RequestParam(required = false) String type,
+                                    @RequestParam(required = false) String tag) {
         Item.Type t = null;
         if (type != null && !type.isBlank()) {
             try { t = Item.Type.valueOf(type.toUpperCase()); } catch (IllegalArgumentException ignored) {}
         }
-        return ResponseEntity.ok(itemService.search(auth.getName(), q, t));
+        return ResponseEntity.ok(itemService.search(auth.getName(), q, t, tag));
     }
 
     @PostMapping
@@ -127,6 +128,24 @@ public class ItemController {
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("message", "Failed to update tags"));
+        }
+    }
+
+    @PatchMapping("/folders/{folderId}/revision")
+    public ResponseEntity<?> updateFolderRevision(Authentication auth,
+                                                   @PathVariable Long folderId,
+                                                   @RequestBody Map<String, Object> body) {
+        Object enabledRaw = body.get("enabled");
+        boolean enabled = enabledRaw == null || Boolean.parseBoolean(String.valueOf(enabledRaw));
+
+        try {
+            return ResponseEntity.ok(itemService.updateFolderRevisionTags(auth.getName(), folderId, enabled));
+        } catch (ResponseStatusException ex) {
+            String message = ex.getReason() != null ? ex.getReason() : "Failed to update folder revision";
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Failed to update folder revision"));
         }
     }
 
