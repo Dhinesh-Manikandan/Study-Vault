@@ -78,7 +78,6 @@ export default function Sidebar() {
         <div className="sidebar-avatar">{initials}</div>
         <div className="sidebar-user-info">
           <div className="sidebar-user-name">{user?.username || user?.email?.split('@')[0]}</div>
-          <div className="sidebar-user-sub">CSE Student</div>
         </div>
         <button className="sidebar-signout" onClick={() => navigate('/profile')} title="Profile">👤</button>
         <button className="sidebar-signout" onClick={signOut} title="Sign out">↩</button>
