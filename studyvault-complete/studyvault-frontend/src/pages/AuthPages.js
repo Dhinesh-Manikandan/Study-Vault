@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
+const apiUrlHint = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+
 export function Login() {
   const { signIn } = useAuth();
   const [identity, setIdentity] = useState('');
@@ -22,7 +24,7 @@ export function Login() {
       }
       toast.success('Signed in');
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Unable to sign in');
+      toast.error(err?.response?.data?.message || `Unable to sign in. Check API URL: ${apiUrlHint}`);
     } finally {
       setLoading(false);
     }
@@ -91,7 +93,7 @@ export function Register() {
         toast.success('Account created');
       }
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Unable to create account');
+      toast.error(err?.response?.data?.message || `Unable to create account. Check API URL: ${apiUrlHint}`);
     } finally {
       setLoading(false);
     }
