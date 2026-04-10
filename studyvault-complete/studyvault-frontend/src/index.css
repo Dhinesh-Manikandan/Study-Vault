@@ -177,23 +177,6 @@ input, select, textarea {
 .empty-state h3 { font-size: 1rem; color: var(--text2); margin-bottom: 0.35rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; }
 .empty-state p { font-size: 0.8rem; }
 
-.app-support-footer {
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface2) 72%, #ffffff 28%);
-  color: var(--text2);
-  font-size: 0.74rem;
-  text-align: center;
-  padding: 0.65rem 0.85rem;
-}
-
-.app-support-footer a {
-  color: var(--accent);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.app-support-footer a:hover { text-decoration: underline; }
-
 @media (max-width: 680px) {
   .app-layout {
     flex-direction: column;
@@ -208,10 +191,5 @@ input, select, textarea {
   .btn {
     min-height: 36px;
     font-size: 0.8rem;
-  }
-
-  .app-support-footer {
-    font-size: 0.71rem;
-    line-height: 1.45;
   }
 }
