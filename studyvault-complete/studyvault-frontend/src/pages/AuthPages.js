@@ -26,8 +26,8 @@ function AuthAside({ mode = 'login' }) {
       <div className="auth-aside-card auth-aside-card-muted">
         <div className="auth-aside-eyebrow">Why StudyVault</div>
         <ul className="auth-aside-list">
-          <li>Smart folder organization for each semester</li>
-          <li>Revision tags to focus before exams</li>
+          <li>Smart folder organization for projects, topics, and learning tracks</li>
+          <li>Priority and revision tags to stay focused before key deadlines</li>
           <li>{isLogin ? 'Continue exactly where you left off' : 'Create your vault and start adding resources'}</li>
         </ul>
       </div>
