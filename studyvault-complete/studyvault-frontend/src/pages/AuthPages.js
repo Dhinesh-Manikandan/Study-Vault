@@ -75,7 +75,11 @@ export function Login() {
               </button>
             </div>
           </div>
-          <p className="auth-note">Forgot username or password? Please ask the developer.</p>
+          <p className="auth-note">
+            For forgot credentials, feedback, feature requests, or bug reports, contact
+            {' '}
+            <a href="mailto:support.dhinesh@gmail.com">support.dhinesh@gmail.com</a>.
+          </p>
           <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
             {loading ? <span className="spinner" /> : 'Sign In'}
           </button>

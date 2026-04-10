@@ -51,6 +51,10 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <AppRoutes />
+        <footer className="app-support-footer">
+          For feedback, suggestions, feature requests, bug reports, or forgot credentials: 
+          <a href="mailto:support.dhinesh@gmail.com">support.dhinesh@gmail.com</a>
+        </footer>
         <Toaster
           position="bottom-right"
           toastOptions={{

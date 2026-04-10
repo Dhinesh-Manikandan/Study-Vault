@@ -29,6 +29,12 @@
 	font-size: 0.72rem;
 	color: var(--text3);
 }
+.auth-note a {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+.auth-note a:hover { text-decoration: underline; }
 .auth-submit { width: 100%; justify-content: center; padding: 0.65rem; margin-top: 0.5rem; font-size: 0.85rem; }
 .auth-switch { text-align: center; font-size: 0.78rem; color: var(--text3); margin-top: 1.25rem; }
 .auth-switch a { color: var(--accent); font-weight: 600; text-decoration: none; }

@@ -210,6 +210,16 @@ export default function ProfilePage() {
               {busy ? 'Deleting...' : 'Delete Account Data'}
             </button>
           </div>
+
+          <div className="card profile-card profile-support">
+            <div className="profile-section-title">Support</div>
+            <p className="profile-support-text">
+              For feedback, suggestions, feature changes, error reporting, or forgot credentials,
+              contact
+              {' '}
+              <a href="mailto:support.dhinesh@gmail.com">support.dhinesh@gmail.com</a>.
+            </p>
+          </div>
         </div>
       </div>
     </div>
