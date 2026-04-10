@@ -11,6 +11,7 @@ export function Login() {
   const { signIn } = useAuth();
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading,  setLoading]  = useState(false);
 
   const handleSubmit = async (e) => {
@@ -54,16 +55,27 @@ export function Login() {
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input
-              className="form-input"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
+            <div className="password-field">
+              <input
+                className="form-input"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+              <button
+                className="password-toggle"
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
+          <p className="auth-note">Forgot username or password? Please ask the developer.</p>
           <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
             {loading ? <span className="spinner" /> : 'Sign In'}
           </button>
@@ -79,6 +91,7 @@ export function Register() {
   const { signUp } = useAuth();
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading,  setLoading]  = useState(false);
 
   const handleSubmit = async (e) => {
@@ -123,15 +136,25 @@ export function Register() {
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input
-              className="form-input"
-              type="password"
-              placeholder="Min. 6 characters"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
+            <div className="password-field">
+              <input
+                className="form-input"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Min. 6 characters"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+              <button
+                className="password-toggle"
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
           <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
             {loading ? <span className="spinner" /> : 'Create Account'}

@@ -145,6 +145,31 @@
   .revision-grid { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 680px) {
+  .pack-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .revision-card {
+    padding: 0.76rem 0.78rem;
+  }
+
+  .revision-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .revision-open-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .revision-tags {
+    justify-content: flex-start;
+  }
+}
+
 .fc-answer { padding: 0.6rem 0.95rem; border-radius: 8px; background: var(--surface2); border: 1px dashed var(--border2); font-size: 0.8rem; color: var(--text2); line-height: 1.6; margin-bottom: 1.2rem; min-height: 52px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .fc-answer.revealed { background: var(--accent-light); border-color: var(--accent); color: var(--text); justify-content: flex-start; }
 

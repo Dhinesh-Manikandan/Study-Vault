@@ -74,3 +74,39 @@
 .modal-footer { display: flex; gap: 0.45rem; justify-content: flex-end; margin-top: 1.3rem; }
 .form-group { margin-bottom: 0.95rem; }
 .form-group label { display: block; font-size: 0.73rem; font-weight: 600; color: var(--text2); margin-bottom: 0.32rem; }
+
+@media (max-width: 680px) {
+	.folder-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.folder-actions {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.42rem;
+	}
+
+	.folder-actions .btn {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.subfolder-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.list-item {
+		align-items: flex-start;
+	}
+
+	.list-actions {
+		opacity: 1;
+		margin-left: auto;
+	}
+
+	.modal {
+		padding: 1.15rem;
+		border-radius: 12px;
+	}
+}

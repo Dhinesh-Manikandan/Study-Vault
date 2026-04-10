@@ -10,6 +10,13 @@ export default function Sidebar() {
   const location = useLocation();
   const [rootFolders, setRootFolders] = useState([]);
   const [expanded, setExpanded] = useState({});
+  const navItems = [
+    { icon: '🏠', label: 'Dashboard', path: '/' },
+    { icon: '🔍', label: 'Search', path: '/search' },
+    { icon: '⭐', label: 'Starred', path: '/starred' },
+    { icon: '🎯', label: 'Revision', path: '/revision' },
+    { icon: '👤', label: 'Profile', path: '/profile' },
+  ];
 
   useEffect(() => {
     getFolders(null).then(setRootFolders).catch(() => {});
@@ -24,6 +31,29 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
+      <div className="sidebar-mobile-top">
+        <div className="sidebar-logo-text">Study<span>Vault</span></div>
+        <div className="sidebar-mobile-actions">
+          <button className="sidebar-signout" onClick={() => navigate('/profile')} title="Profile">👤</button>
+          <button className="sidebar-signout" onClick={signOut} title="Sign out">↩</button>
+        </div>
+      </div>
+
+      <div className="sidebar-mobile-nav" role="navigation" aria-label="Mobile navigation">
+        {navItems.map(item => (
+          <button
+            key={item.path}
+            type="button"
+            className={`sidebar-mobile-item ${isActive(item.path) ? 'active' : ''}`}
+            onClick={() => navigate(item.path)}
+          >
+            <span className="sidebar-item-icon">{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="sidebar-desktop">
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">📚</div>
@@ -33,13 +63,7 @@ export default function Sidebar() {
       {/* Nav */}
       <div className="sidebar-section">
         <div className="sidebar-label">Menu</div>
-        {[
-          { icon: '🏠', label: 'Dashboard', path: '/' },
-          { icon: '🔍', label: 'Search',    path: '/search' },
-          { icon: '⭐', label: 'Starred',   path: '/starred' },
-          { icon: '🎯', label: 'Revision',  path: '/revision' },
-          { icon: '👤', label: 'Profile',   path: '/profile' },
-        ].map(item => (
+        {navItems.map(item => (
           <div
             key={item.path}
             className={`sidebar-item ${isActive(item.path) ? 'active' : ''}`}
@@ -81,6 +105,7 @@ export default function Sidebar() {
         </div>
         <button className="sidebar-signout" onClick={() => navigate('/profile')} title="Profile">👤</button>
         <button className="sidebar-signout" onClick={signOut} title="Sign out">↩</button>
+      </div>
       </div>
     </aside>
   );
