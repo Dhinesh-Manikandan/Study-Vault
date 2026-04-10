@@ -75,16 +75,20 @@ export function Login() {
               </button>
             </div>
           </div>
-          <p className="auth-note">
-            For forgot credentials, feedback, feature requests, or bug reports, contact
-            {' '}
-            <a href="mailto:support.dhinesh@gmail.com">support.dhinesh@gmail.com</a>.
-          </p>
           <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
             {loading ? <span className="spinner" /> : 'Sign In'}
           </button>
         </form>
         <p className="auth-switch">Don't have an account? <Link to="/register">Sign up free</Link></p>
+      </div>
+      <div className="auth-support-panel" role="note" aria-label="Support contact">
+        <div className="auth-support-title">Need help signing in?</div>
+        <p>
+          For forgot credentials, feedback, feature requests, or bug reports,
+          contact
+          {' '}
+          <a href="mailto:support.dhinesh@gmail.com">support.dhinesh@gmail.com</a>.
+        </p>
       </div>
     </div>
   );

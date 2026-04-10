@@ -39,3 +39,46 @@
 .auth-switch { text-align: center; font-size: 0.78rem; color: var(--text3); margin-top: 1.25rem; }
 .auth-switch a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .auth-switch a:hover { text-decoration: underline; }
+
+.auth-support-panel {
+	position: relative;
+	z-index: 1;
+	margin-top: 0.8rem;
+	width: 100%;
+	max-width: 420px;
+	background: color-mix(in srgb, var(--accent-light) 65%, #ffffff 35%);
+	border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border) 55%);
+	border-radius: 14px;
+	padding: 0.75rem 0.9rem;
+	box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.auth-support-title {
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--accent);
+	margin-bottom: 0.2rem;
+}
+
+.auth-support-panel p {
+	margin: 0;
+	font-size: 0.74rem;
+	line-height: 1.55;
+	color: var(--text2);
+}
+
+.auth-support-panel a {
+	color: var(--accent);
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.auth-support-panel a:hover { text-decoration: underline; }
+
+@media (max-width: 680px) {
+	.auth-support-panel {
+		margin-top: 0.65rem;
+		border-radius: 12px;
+		padding: 0.68rem 0.75rem;
+	}
+}
