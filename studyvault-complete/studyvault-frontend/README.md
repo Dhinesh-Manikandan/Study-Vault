@@ -1,61 +1,51 @@
-# StudyVault — Setup Guide (Your Credentials)
+# StudyVault Frontend
 
-## ✅ Already filled in for you
-- Supabase Project URL
-- Supabase Anon Key (Frontend)
-- Database connection string (pooler for India region)
+## Run locally
 
-## ⚠️ Still needed — 2 things to collect
-
-### 1. Cloudinary (for file uploads)
-Go to: https://cloudinary.com → Sign up free
-→ Dashboard shows Cloud Name, API Key, API Secret
-→ Replace the 3 cloudinary values in application.properties
-
----
-
-## Run Locally (after filling credentials)
-
-### Backend
-```bash
-cd studyvault-backend
-mvn spring-boot:run
-```
-Runs at http://localhost:8080
-
-### Frontend
 ```bash
 cd studyvault-frontend
-# Copy .env.example to .env.local
 copy .env.example .env.local
 npm install
 npm start
 ```
-Opens at http://localhost:3000
 
----
+App runs at `http://localhost:3000`.
 
-## Deploy to Vercel (Frontend)
+## Deploy frontend to Vercel
 
-```bash
-cd studyvault-frontend
-npm install -g vercel
-vercel
-```
-In Vercel dashboard → add these env vars:
-- REACT_APP_API_URL = https://your-railway-backend.up.railway.app/api
+1. Import this frontend folder in Vercel: `studyvault-complete/studyvault-frontend`.
+2. Keep build settings as default CRA:
+	- Build command: `npm run build`
+	- Output directory: `build`
+3. Add environment variable in Vercel project settings:
+	- `REACT_APP_API_URL=https://<your-render-backend-domain>/api`
+4. Deploy and note your Vercel domain (for backend CORS).
 
-## Deploy to Railway (Backend)
+## Deploy backend + DB to Render
 
-1. Push studyvault-backend to GitHub
-2. railway.app → New Project → Deploy from GitHub
-3. Add all application.properties values as env vars in Railway dashboard
-4. Railway gives you a public URL — update REACT_APP_API_URL in Vercel
+1. Create a **PostgreSQL** database in Render.
+2. Create a **Web Service** from `studyvault-complete/studyvault-backend`.
+3. Use these Render settings:
+	- Language/runtime: `Docker`
+	- Root Directory: `studyvault-complete/studyvault-backend`
+	- Build/start commands: leave empty (Render uses `Dockerfile`)
+4. Add backend environment variables in Render:
+	- `SPRING_DATASOURCE_URL` = `jdbc:postgresql://<render-db-host>:<render-db-port>/<render-db-name>?sslmode=require&prepareThreshold=0`
+	- `SPRING_DATASOURCE_USERNAME` = `<render-db-user>`
+	- `SPRING_DATASOURCE_PASSWORD` = `<render-db-password>`
+	- `APP_JWT_SECRET` = `<long-random-secret-at-least-32-chars>`
+	- `APP_JWT_EXPIRATION_MS` = `604800000`
+	- `CLOUDINARY_CLOUD_NAME` = `<cloudinary-cloud-name>`
+	- `CLOUDINARY_API_KEY` = `<cloudinary-api-key>`
+	- `CLOUDINARY_API_SECRET` = `<cloudinary-api-secret>`
+	- `APP_CORS_ALLOWED_ORIGINS` = `https://<your-vercel-domain>,http://localhost:3000`
+	- `APP_CORS_ALLOWED_ORIGIN_PATTERNS` = `https://*.vercel.app`
+	- `APP_AUTH_SEED_ENABLED` = `false`
+5. Deploy backend and copy the Render service URL.
+6. Update Vercel `REACT_APP_API_URL` to that backend URL + `/api`.
 
----
+## Notes
 
-## Your Supabase Project
-- Dashboard: https://supabase.com/dashboard/project/migeuxqmrcwhstifeysn
-- Project ref: migeuxqmrcwhstifeysn
-- Region: ap-south-1 (Mumbai — closest to India ✅)
+- Frontend API base URL is read from `REACT_APP_API_URL`.
+- Backend runtime config is now env-driven through `application.properties`.
 
