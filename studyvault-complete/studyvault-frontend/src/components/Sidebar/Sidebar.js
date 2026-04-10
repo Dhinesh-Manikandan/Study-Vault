@@ -15,6 +15,7 @@ export default function Sidebar() {
     { icon: '🔍', label: 'Search', path: '/search' },
     { icon: '⭐', label: 'Starred', path: '/starred' },
     { icon: '🎯', label: 'Revision', path: '/revision' },
+    { icon: '🛟', label: 'Support', path: '/support' },
     { icon: '👤', label: 'Profile', path: '/profile' },
   ];
 

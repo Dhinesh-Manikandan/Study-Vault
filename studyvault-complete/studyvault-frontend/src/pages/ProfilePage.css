@@ -50,13 +50,8 @@
 
 .profile-danger { grid-column: span 2; border-color: color-mix(in srgb, var(--red) 25%, var(--border) 75%); background: linear-gradient(180deg, color-mix(in srgb, var(--red-bg) 55%, #fff 45%), var(--surface)); }
 .profile-danger-text { font-size: 0.74rem; color: var(--text2); margin: 0.35rem 0 0.9rem; }
-.profile-support { grid-column: span 2; }
-.profile-support-text { font-size: 0.74rem; color: var(--text2); line-height: 1.65; }
-.profile-support-text a { color: var(--accent); font-weight: 600; text-decoration: none; }
-.profile-support-text a:hover { text-decoration: underline; }
 
 @media (max-width: 780px) {
   .profile-grid { grid-template-columns: 1fr; }
   .profile-danger { grid-column: span 1; }
-  .profile-support { grid-column: span 1; }
 }

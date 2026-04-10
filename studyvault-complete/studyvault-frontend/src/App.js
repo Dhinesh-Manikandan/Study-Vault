@@ -11,6 +11,7 @@ import SearchPage from './pages/SearchPage';
 import RevisionPage from './pages/RevisionPage';
 import StarredPage from './pages/StarredPage';
 import ProfilePage from './pages/ProfilePage';
+import SupportPage from './pages/SupportPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -41,6 +42,7 @@ function AppRoutes() {
       <Route path="/revision" element={<ProtectedRoute><RevisionPage /></ProtectedRoute>} />
       <Route path="/starred"  element={<ProtectedRoute><StarredPage /></ProtectedRoute>} />
       <Route path="/profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/support"  element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
       <Route path="*"         element={<Navigate to="/" replace />} />
     </Routes>
   );
