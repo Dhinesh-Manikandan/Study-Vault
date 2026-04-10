@@ -7,6 +7,34 @@ import './Auth.css';
 
 const apiUrlHint = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
+function AuthAside({ mode = 'login' }) {
+  const isLogin = mode === 'login';
+
+  return (
+    <aside className="auth-aside" aria-label="Support and quick help">
+      <div className="auth-aside-card">
+        <div className="auth-aside-eyebrow">StudyVault Support</div>
+        <h2 className="auth-aside-title">Need help quickly?</h2>
+        <p className="auth-aside-text">
+          For forgot credentials, feature requests, bug reports, or suggestions,
+          reach us at
+          {' '}
+          <a href="mailto:support.dhinesh@gmail.com">support.dhinesh@gmail.com</a>
+        </p>
+      </div>
+
+      <div className="auth-aside-card auth-aside-card-muted">
+        <div className="auth-aside-eyebrow">Why StudyVault</div>
+        <ul className="auth-aside-list">
+          <li>Smart folder organization for each semester</li>
+          <li>Revision tags to focus before exams</li>
+          <li>{isLogin ? 'Continue exactly where you left off' : 'Create your vault and start adding resources'}</li>
+        </ul>
+      </div>
+    </aside>
+  );
+}
+
 export function Login() {
   const { signIn } = useAuth();
   const [identity, setIdentity] = useState('');
@@ -33,62 +61,56 @@ export function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">📚</div>
-          <div className="auth-logo-text">Study<span>Vault</span></div>
-        </div>
-        <h1 className="auth-title">Welcome back</h1>
-        <p className="auth-sub">Sign in with your username and password</p>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              className="form-input"
-              type="text"
-              placeholder="Enter your username"
-              value={identity}
-              onChange={e => setIdentity(e.target.value)}
-              required
-              autoComplete="username"
-            />
+      <div className="auth-shell">
+        <div className="auth-card">
+          <div className="auth-logo">
+            <div className="auth-logo-icon">📚</div>
+            <div className="auth-logo-text">Study<span>Vault</span></div>
           </div>
-          <div className="form-group">
-            <label>Password</label>
-            <div className="password-field">
+          <h1 className="auth-title">Welcome back</h1>
+          <p className="auth-sub">Sign in with your username and password</p>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Username</label>
               <input
                 className="form-input"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
+                type="text"
+                placeholder="Enter your username"
+                value={identity}
+                onChange={e => setIdentity(e.target.value)}
                 required
-                autoComplete="current-password"
+                autoComplete="username"
               />
-              <button
-                className="password-toggle"
-                type="button"
-                onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
             </div>
-          </div>
-          <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Sign In'}
-          </button>
-        </form>
-        <p className="auth-switch">Don't have an account? <Link to="/register">Sign up free</Link></p>
-      </div>
-      <div className="auth-support-panel" role="note" aria-label="Support contact">
-        <div className="auth-support-title">Need help signing in?</div>
-        <p>
-          For forgot credentials, feedback, feature requests, or bug reports,
-          contact
-          {' '}
-          <a href="mailto:support.dhinesh@gmail.com">support.dhinesh@gmail.com</a>.
-        </p>
+            <div className="form-group">
+              <label>Password</label>
+              <div className="password-field">
+                <input
+                  className="form-input"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+            <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
+              {loading ? <span className="spinner" /> : 'Sign In'}
+            </button>
+          </form>
+          <p className="auth-switch">Don't have an account? <Link to="/register">Sign up free</Link></p>
+        </div>
+        <AuthAside mode="login" />
       </div>
     </div>
   );
@@ -122,53 +144,56 @@ export function Register() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">📚</div>
-          <div className="auth-logo-text">Study<span>Vault</span></div>
-        </div>
-        <h1 className="auth-title">Create your vault</h1>
-        <p className="auth-sub">Create a multi-user account for your study vault</p>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              className="form-input"
-              type="text"
-              placeholder="Choose a username"
-              value={identity}
-              onChange={e => setIdentity(e.target.value)}
-              required
-              autoComplete="username"
-            />
+      <div className="auth-shell">
+        <div className="auth-card">
+          <div className="auth-logo">
+            <div className="auth-logo-icon">📚</div>
+            <div className="auth-logo-text">Study<span>Vault</span></div>
           </div>
-          <div className="form-group">
-            <label>Password</label>
-            <div className="password-field">
+          <h1 className="auth-title">Create your vault</h1>
+          <p className="auth-sub">Create a multi-user account for your study vault</p>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Username</label>
               <input
                 className="form-input"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Min. 6 characters"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
+                type="text"
+                placeholder="Choose a username"
+                value={identity}
+                onChange={e => setIdentity(e.target.value)}
                 required
-                autoComplete="new-password"
+                autoComplete="username"
               />
-              <button
-                className="password-toggle"
-                type="button"
-                onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
             </div>
-          </div>
-          <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Create Account'}
-          </button>
-        </form>
-        <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
+            <div className="form-group">
+              <label>Password</label>
+              <div className="password-field">
+                <input
+                  className="form-input"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min. 6 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+            <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
+              {loading ? <span className="spinner" /> : 'Create Account'}
+            </button>
+          </form>
+          <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
+        </div>
+        <AuthAside mode="register" />
       </div>
     </div>
   );
