@@ -38,7 +38,19 @@ export default function SearchPage() {
   };
 
   useEffect(() => {
-    doSearch('', 'All', 'All Tags');
+    const loadInitialResults = async () => {
+      setLoading(true);
+      try {
+        const data = await searchItems('', null, null);
+        setResults(data);
+        setSearched(true);
+      } catch {
+        setResults([]);
+      }
+      setLoading(false);
+    };
+
+    loadInitialResults();
   }, []);
 
   const highlight = (text) => {
