@@ -136,14 +136,10 @@ export default function FolderView() {
     const isRemovingRevision = tag === 'revision' && hasTag;
 
     if (isAddingRevision && exams.length === 0) {
-      toast.error('Add an exam first before linking revision items');
-      return;
+      nextExamId = null;
     }
 
     let nextExamId = item.examId ?? null;
-    if (isAddingRevision && !nextExamId && exams[0]?.id) {
-      nextExamId = exams[0].id;
-    }
     if (isRemovingRevision || !nextTags.includes('revision')) {
       nextExamId = null;
     }
@@ -410,7 +406,7 @@ export default function FolderView() {
                             value={item.examId || ''}
                             onChange={(e) => handleRevisionExamChange(item, e.target.value)}
                           >
-                            <option value="">Select exam</option>
+                              <option value="">No exam mapping</option>
                             {exams.map(exam => (
                               <option key={exam.id} value={exam.id}>{exam.subject}</option>
                             ))}

@@ -66,9 +66,6 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
     }
 
     const hasRevisionTag = tags.includes('revision');
-    if (hasRevisionTag && !selectedExamId) {
-      return toast.error('Choose an exam for this revision item');
-    }
 
     setSaving(true);
     try {
@@ -246,22 +243,21 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
           {tags.includes('revision') && (
             <div className="revision-exam-group">
               <label className="revision-exam-label">Linked Exam</label>
-              {exams.length === 0 ? (
-                <div className="tag-help">No exams found. Add an exam first from Dashboard.</div>
-              ) : (
                 <select
                   className="form-input"
                   value={selectedExamId}
                   onChange={(e) => setSelectedExamId(e.target.value)}
                 >
-                  <option value="">Select exam</option>
+                  <option value="">No exam mapping</option>
                   {exams.map(exam => (
                     <option key={exam.id} value={exam.id}>
                       {exam.subject} ({new Date(exam.examDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
                     </option>
                   ))}
                 </select>
-              )}
+                {exams.length === 0 && (
+                  <div className="tag-help">You can leave this item unmapped, or add an exam later.</div>
+                )}
             </div>
           )}
         </div>
