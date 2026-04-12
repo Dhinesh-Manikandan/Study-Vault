@@ -5,7 +5,7 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import { useAuth } from '../context/AuthContext';
 import { getStats, getRecentItems, getExams, getFolders, createFolder, createExam, deleteExam, deleteFolder } from '../services/api';
-import { differenceInDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import './Dashboard.css';
 
 const TYPE_META = {
@@ -94,9 +94,51 @@ export default function Dashboard() {
     }
   };
 
-  const daysLeft = (dateStr) => {
-    const d = differenceInDays(new Date(dateStr), new Date());
-    return d < 0 ? 0 : d;
+  const getExamDateTime = (exam) => {
+    if (!exam?.examDate) return null;
+    const datePart = String(exam.examDate).slice(0, 10);
+    const rawTime = exam.examTime?.trim();
+    const timePart = rawTime
+      ? rawTime.length === 5
+        ? `${rawTime}:00`
+        : rawTime
+      : '23:59:59';
+
+    const dt = new Date(`${datePart}T${timePart}`);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  };
+
+  const getCountdown = (exam) => {
+    const target = getExamDateTime(exam);
+    if (!target) return { value: '—', label: 'days', days: 0 };
+
+    const diffMs = target.getTime() - Date.now();
+    if (diffMs <= 0) return { value: 0, label: 'hours', days: 0 };
+
+    const totalMins = Math.floor(diffMs / (1000 * 60));
+    if (totalMins < 60) {
+      return {
+        value: totalMins,
+        label: totalMins === 1 ? 'min' : 'mins',
+        days: 0,
+      };
+    }
+
+    const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (totalHours < 24) {
+      return {
+        value: totalHours,
+        label: totalHours === 1 ? 'hour' : 'hours',
+        days: 0,
+      };
+    }
+
+    const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return {
+      value: totalDays,
+      label: totalDays === 1 ? 'day' : 'days',
+      days: totalDays,
+    };
   };
 
   const urgencyColor = (days) => {
@@ -115,6 +157,7 @@ export default function Dashboard() {
     });
 
   const flatFolders = flattenFolders(folders);
+  const nextExamCountdown = exams[0] ? getCountdown(exams[0]) : null;
 
   return (
     <div className="app-layout">
@@ -127,7 +170,7 @@ export default function Dashboard() {
             <h1 className="dash-title">{greeting}, <span>{name}</span> 👋</h1>
             {exams.length > 0 && (
               <p className="dash-sub">
-                {exams[0].subject} exam in {daysLeft(exams[0].examDate)} days — keep going!
+                {exams[0].subject} exam in {nextExamCountdown?.value} {nextExamCountdown?.label} — keep going!
               </p>
             )}
           </div>
@@ -140,7 +183,13 @@ export default function Dashboard() {
             { label: 'Total Items',  value: stats.totalItems,   icon: '📦', sub: 'saved resources' },
             { label: 'Folders',      value: stats.totalFolders, icon: '📁', sub: 'across semesters' },
             { label: 'Starred',      value: stats.starredItems, icon: '⭐', sub: 'key items' },
-            { label: 'Days to Exam', value: exams[0] ? daysLeft(exams[0].examDate) : '—', icon: '⏳', sub: exams[0]?.subject || 'No exam added', accent: true },
+            {
+              label: 'Time to Exam',
+              value: nextExamCountdown ? `${nextExamCountdown.value} ${nextExamCountdown.label}` : '—',
+              icon: '⏳',
+              sub: exams[0]?.subject || 'No exam added',
+              accent: true,
+            },
           ].map(s => (
             <div className="stat-card card" key={s.label}>
               <div className="stat-top">
@@ -171,13 +220,13 @@ export default function Dashboard() {
           ) : (
             <div className="exam-row">
               {exams.slice(0, 4).map(exam => {
-                const days = daysLeft(exam.examDate);
-                const c = urgencyColor(days);
+                const countdown = getCountdown(exam);
+                const c = urgencyColor(countdown.days);
                 return (
                   <div className="exam-card card" key={exam.id}>
                     <div className="exam-countdown" style={{ background: c.bg }}>
-                      <div className="exam-days" style={{ color: c.text }}>{days}</div>
-                      <div className="exam-dlabel" style={{ color: c.lbl }}>days</div>
+                      <div className="exam-days" style={{ color: c.text }}>{countdown.value}</div>
+                      <div className="exam-dlabel" style={{ color: c.lbl }}>{countdown.label}</div>
                     </div>
                     <div className="exam-info">
                       <div className="exam-name">{exam.subject}</div>
@@ -186,7 +235,7 @@ export default function Dashboard() {
                         {exam.examTime ? ` · ${exam.examTime}` : ''}
                       </div>
                       <div className="exam-prog">
-                        <div className="exam-prog-fill" style={{ width: `${Math.min(100, (30 - days) / 30 * 100)}%`, background: c.bar }} />
+                        <div className="exam-prog-fill" style={{ width: `${Math.min(100, (30 - countdown.days) / 30 * 100)}%`, background: c.bar }} />
                       </div>
                     </div>
                     <button className="exam-del" onClick={() => handleDeleteExam(exam.id)}>✕</button>
