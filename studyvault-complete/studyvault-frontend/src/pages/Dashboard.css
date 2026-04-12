@@ -30,6 +30,7 @@
 .exam-del { position: absolute; top: 6px; right: 8px; background: none; border: none; cursor: pointer; color: var(--text3); font-size: 0.7rem; opacity: 0; transition: opacity 0.15s; }
 .exam-card:hover .exam-del { opacity: 1; }
 .exam-del:hover { color: var(--red); }
+.exam-toggle { margin-top: 0.55rem; }
 
 /* Folders */
 .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 0.7rem; }

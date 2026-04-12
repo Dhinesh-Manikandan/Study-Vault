@@ -17,6 +17,7 @@ const TYPE_META = {
 };
 
 const RECENT_LIMIT = 6;
+const EXAM_PREVIEW_LIMIT = 4;
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -36,6 +37,7 @@ export default function Dashboard() {
   // New exam modal
   const [showNewExam, setShowNewExam] = useState(false);
   const [newExam, setNewExam] = useState({ subject: '', date: '', time: '' });
+  const [showAllExams, setShowAllExams] = useState(false);
 
   const name = user?.email?.split('@')[0] || 'there';
   const hour = new Date().getHours();
@@ -158,6 +160,7 @@ export default function Dashboard() {
 
   const flatFolders = flattenFolders(folders);
   const nextExamCountdown = exams[0] ? getCountdown(exams[0]) : null;
+  const visibleExams = showAllExams ? exams : exams.slice(0, EXAM_PREVIEW_LIMIT);
 
   return (
     <div className="app-layout">
@@ -218,31 +221,44 @@ export default function Dashboard() {
               <button className="btn btn-primary" style={{ marginTop:'1rem' }} onClick={() => setShowNewExam(true)}>＋ Add Exam</button>
             </div>
           ) : (
-            <div className="exam-row">
-              {exams.slice(0, 4).map(exam => {
-                const countdown = getCountdown(exam);
-                const c = urgencyColor(countdown.days);
-                return (
-                  <div className="exam-card card" key={exam.id}>
-                    <div className="exam-countdown" style={{ background: c.bg }}>
-                      <div className="exam-days" style={{ color: c.text }}>{countdown.value}</div>
-                      <div className="exam-dlabel" style={{ color: c.lbl }}>{countdown.label}</div>
-                    </div>
-                    <div className="exam-info">
-                      <div className="exam-name">{exam.subject}</div>
-                      <div className="exam-date">
-                        {format(new Date(exam.examDate), 'MMM d')}
-                        {exam.examTime ? ` · ${exam.examTime}` : ''}
+            <>
+              <div className="exam-row">
+                {visibleExams.map(exam => {
+                  const countdown = getCountdown(exam);
+                  const c = urgencyColor(countdown.days);
+                  return (
+                    <div className="exam-card card" key={exam.id}>
+                      <div className="exam-countdown" style={{ background: c.bg }}>
+                        <div className="exam-days" style={{ color: c.text }}>{countdown.value}</div>
+                        <div className="exam-dlabel" style={{ color: c.lbl }}>{countdown.label}</div>
                       </div>
-                      <div className="exam-prog">
-                        <div className="exam-prog-fill" style={{ width: `${Math.min(100, (30 - countdown.days) / 30 * 100)}%`, background: c.bar }} />
+                      <div className="exam-info">
+                        <div className="exam-name">{exam.subject}</div>
+                        <div className="exam-date">
+                          {format(new Date(exam.examDate), 'MMM d')}
+                          {exam.examTime ? ` · ${exam.examTime}` : ''}
+                        </div>
+                        <div className="exam-prog">
+                          <div className="exam-prog-fill" style={{ width: `${Math.min(100, (30 - countdown.days) / 30 * 100)}%`, background: c.bar }} />
+                        </div>
                       </div>
+                      <button className="exam-del" onClick={() => handleDeleteExam(exam.id)}>✕</button>
                     </div>
-                    <button className="exam-del" onClick={() => handleDeleteExam(exam.id)}>✕</button>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+
+              {exams.length > EXAM_PREVIEW_LIMIT && (
+                <button
+                  className="see-all exam-toggle"
+                  onClick={() => setShowAllExams(prev => !prev)}
+                >
+                  {showAllExams
+                    ? 'Show fewer exams'
+                    : `Show all exams (${exams.length})`}
+                </button>
+              )}
+            </>
           )}
         </div>
 
