@@ -132,12 +132,7 @@ export default function FolderView() {
       ? currentTags.filter(t => t !== tag)
       : [...currentTags, tag];
 
-    const isAddingRevision = tag === 'revision' && !hasTag;
     const isRemovingRevision = tag === 'revision' && hasTag;
-
-    if (isAddingRevision && exams.length === 0) {
-      nextExamId = null;
-    }
 
     let nextExamId = item.examId ?? null;
     if (isRemovingRevision || !nextTags.includes('revision')) {
