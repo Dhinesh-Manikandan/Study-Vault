@@ -1,5 +1,5 @@
 // SearchPage.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
@@ -36,6 +36,10 @@ export default function SearchPage() {
     } catch { setResults([]); }
     setLoading(false);
   };
+
+  useEffect(() => {
+    doSearch('', 'All', 'All Tags');
+  }, []);
 
   const highlight = (text) => {
     if (!query) return text;

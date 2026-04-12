@@ -6,16 +6,16 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.HashMap;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +30,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.studyvault.entity.Exam;
 import com.studyvault.entity.Folder;
 import com.studyvault.entity.Item;
+import com.studyvault.repository.ExamRepository;
 import com.studyvault.repository.FolderRepository;
 import com.studyvault.repository.ItemRepository;
 
@@ -46,6 +48,7 @@ public class ItemService {
 
     @Autowired private ItemRepository itemRepo;
     @Autowired private FolderRepository folderRepo;
+    @Autowired private ExamRepository examRepo;
     @Autowired private Cloudinary cloudinary;
 
     public List<Item> getItemsInFolder(String userId, Long folderId) {
@@ -152,14 +155,17 @@ public class ItemService {
 
         @SuppressWarnings("unchecked")
         List<String> tags = (List<String>) body.getOrDefault("tags", List.of());
-        item.setTags(normalizeTags(tags));
+        List<String> normalizedTags = normalizeTags(tags);
+        item.setTags(normalizedTags);
+        Long examId = parseExamId(body.get("examId"));
+        item.setExamId(resolveExamId(userId, normalizedTags, examId));
 
         return itemRepo.save(item);
     }
 
     public Item uploadItem(String userId, MultipartFile file, String title,
                            Long folderId, Item.Type type,
-                           List<String> tags, String notes) throws IOException {
+                           List<String> tags, String notes, Long examId) throws IOException {
         if (title == null || title.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
         }
@@ -205,7 +211,9 @@ public class ItemService {
         item.setFileUrl(fileUrl);
         item.setType(type);
         item.setUserId(userId);
-        item.setTags(normalizeTags(tags));
+        List<String> normalizedTags = normalizeTags(tags);
+        item.setTags(normalizedTags);
+        item.setExamId(resolveExamId(userId, normalizedTags, examId));
         String normalizedNotes = normalizeText(notes);
         validateWordLimit(normalizedNotes, "Personal note");
         item.setNotes(normalizedNotes);
@@ -249,14 +257,23 @@ public class ItemService {
         return itemRepo.save(item);
     }
 
-    public Item updateTags(String userId, Long id, List<String> tags) {
+    public Item updateTags(String userId, Long id, List<String> tags, Long examId, boolean hasExamId) {
         Item item = itemRepo.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
         if (!item.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot update tags for this item");
         }
 
-        item.setTags(normalizeTags(tags));
+        List<String> normalizedTags = normalizeTags(tags);
+        item.setTags(normalizedTags);
+
+        boolean isRevision = normalizedTags.stream().map(this::normalizeTag).anyMatch("revision"::equals);
+        if (!isRevision) {
+            item.setExamId(null);
+        } else if (hasExamId) {
+            item.setExamId(resolveExamId(userId, normalizedTags, examId));
+        }
+
         return itemRepo.save(item);
     }
 
@@ -288,6 +305,10 @@ public class ItemService {
                 changed = nextTags.add("revision");
             } else {
                 changed = nextTags.remove("revision");
+                if (item.getExamId() != null) {
+                    item.setExamId(null);
+                    changed = true;
+                }
             }
 
             if (changed) {
@@ -394,6 +415,41 @@ public class ItemService {
             tag = tag.substring(1).trim();
         }
         return tag;
+    }
+
+    private Long parseExamId(Object examIdRaw) {
+        if (examIdRaw == null) {
+            return null;
+        }
+
+        String value = String.valueOf(examIdRaw).trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid exam id");
+        }
+    }
+
+    private Long resolveExamId(String userId, List<String> tags, Long examId) {
+        boolean revisionTag = tags != null && tags.stream().map(this::normalizeTag).anyMatch("revision"::equals);
+        if (!revisionTag) {
+            return null;
+        }
+        if (examId == null) {
+            return null;
+        }
+
+        Exam exam = examRepo.findById(examId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found"));
+        if (!userId.equals(exam.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot link this exam");
+        }
+
+        return examId;
     }
 
     private List<Long> collectFolderIds(String userId, Long rootFolderId) {

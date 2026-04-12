@@ -152,4 +152,16 @@
   opacity: 0.8;
 }
 
+.revision-exam-group {
+  margin-top: 0.6rem;
+}
+
+.revision-exam-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 0.28rem;
+}
+
 .modal-footer { display: flex; gap: 0.45rem; justify-content: flex-end; margin-top: 1.4rem; }

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { createItem, uploadItem } from '../../services/api';
+import { createItem, getExams, uploadItem } from '../../services/api';
 import './AddItem.css';
 
 const TYPES = [
@@ -28,10 +28,24 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
   const [tags, setTags]       = useState([]);
   const [file, setFile]       = useState(null);
   const [notes, setNotes]     = useState('');
+  const [exams, setExams]     = useState([]);
+  const [selectedExamId, setSelectedExamId] = useState('');
   const [saving, setSaving]   = useState(false);
 
-  const toggleTag = (t) =>
+  useEffect(() => {
+    getExams().then((data) => {
+      setExams(Array.isArray(data) ? data : []);
+    }).catch(() => {
+      setExams([]);
+    });
+  }, []);
+
+  const toggleTag = (t) => {
     setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+    if (t === 'revision' && tags.includes('revision')) {
+      setSelectedExamId('');
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) return toast.error('Please add a title');
@@ -51,6 +65,11 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
       return toast.error(`Personal note cannot exceed ${MAX_NOTE_WORDS} words`);
     }
 
+    const hasRevisionTag = tags.includes('revision');
+    if (hasRevisionTag && !selectedExamId) {
+      return toast.error('Choose an exam for this revision item');
+    }
+
     setSaving(true);
     try {
       if (file) {
@@ -61,9 +80,21 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
         fd.append('type', type);
         fd.append('tags', tags.join(','));
         fd.append('notes', notes);
+        if (hasRevisionTag && selectedExamId) {
+          fd.append('examId', selectedExamId);
+        }
         await uploadItem(fd);
       } else {
-        await createItem({ title, url, content, type, folderId: folder, tags, notes });
+        await createItem({
+          title,
+          url,
+          content,
+          type,
+          folderId: folder,
+          tags,
+          notes,
+          examId: hasRevisionTag && selectedExamId ? Number(selectedExamId) : null,
+        });
       }
       toast.success('Saved to StudyVault!');
       onSaved?.();
@@ -211,6 +242,28 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
               </button>
             ))}
           </div>
+
+          {tags.includes('revision') && (
+            <div className="revision-exam-group">
+              <label className="revision-exam-label">Linked Exam</label>
+              {exams.length === 0 ? (
+                <div className="tag-help">No exams found. Add an exam first from Dashboard.</div>
+              ) : (
+                <select
+                  className="form-input"
+                  value={selectedExamId}
+                  onChange={(e) => setSelectedExamId(e.target.value)}
+                >
+                  <option value="">Select exam</option>
+                  {exams.map(exam => (
+                    <option key={exam.id} value={exam.id}>
+                      {exam.subject} ({new Date(exam.examDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Notes */}

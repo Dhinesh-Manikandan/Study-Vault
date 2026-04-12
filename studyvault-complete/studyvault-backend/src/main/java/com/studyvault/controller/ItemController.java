@@ -80,7 +80,8 @@ public class ItemController {
             @RequestParam("folderId") Long folderId,
             @RequestParam("type")     String type,
             @RequestParam(value = "tags",  required = false) String tags,
-            @RequestParam(value = "notes", required = false) String notes) throws Exception {
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "examId", required = false) Long examId) throws Exception {
 
         List<String> tagList = (tags != null && !tags.isBlank())
             ? Arrays.asList(tags.split(",")) : List.of();
@@ -95,7 +96,7 @@ public class ItemController {
         try {
             return ResponseEntity.ok(
                 itemService.uploadItem(auth.getName(), file, title, folderId,
-                    itemType, tagList, notes)
+                    itemType, tagList, notes, examId)
             );
         } catch (ResponseStatusException ex) {
             String message = ex.getReason() != null ? ex.getReason() : "Failed to upload item";
@@ -113,14 +114,17 @@ public class ItemController {
                                         @PathVariable Long id,
                                         @RequestBody Map<String, Object> body) {
         Object tagsRaw = body.get("tags");
+        boolean hasExamId = body.containsKey("examId");
+        Long examId = parseExamId(body.get("examId"));
         List<String> tags = tagsRaw instanceof List<?> rawList
             ? rawList.stream().map(String::valueOf).toList()
             : List.of();
         try {
-            Item updated = itemService.updateTags(auth.getName(), id, tags);
+            Item updated = itemService.updateTags(auth.getName(), id, tags, examId, hasExamId);
             return ResponseEntity.ok(Map.of(
                 "id", updated.getId(),
-                "tags", updated.getTags() != null ? updated.getTags() : List.of()
+                "tags", updated.getTags() != null ? updated.getTags() : List.of(),
+                "examId", updated.getExamId()
             ));
         } catch (ResponseStatusException ex) {
             String message = ex.getReason() != null ? ex.getReason() : "Failed to update tags";
@@ -153,6 +157,23 @@ public class ItemController {
     public ResponseEntity<?> deleteItem(Authentication auth, @PathVariable Long id) {
         itemService.deleteItem(auth.getName(), id);
         return ResponseEntity.ok(Map.of("message", "Deleted"));
+    }
+
+    private Long parseExamId(Object examIdRaw) {
+        if (examIdRaw == null) {
+            return null;
+        }
+
+        String value = String.valueOf(examIdRaw).trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid exam id");
+        }
     }
 
     @GetMapping("/{id}/download")

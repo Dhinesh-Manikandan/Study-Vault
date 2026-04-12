@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getFolders, getItems, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision } from '../services/api';
+import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision } from '../services/api';
 import './FolderView.css';
 
 const TYPE_META = {
@@ -40,6 +40,7 @@ export default function FolderView() {
   const [showNewSub,  setShowNewSub]  = useState(false);
   const [newSubName,  setNewSubName]  = useState('');
   const [allFolders,  setAllFolders]  = useState([]);
+  const [exams,       setExams]       = useState([]);
   const [loading,     setLoading]     = useState(true);
   const lastLoadToastRef = useRef({ key: '', at: 0 });
 
@@ -52,13 +53,15 @@ export default function FolderView() {
     }
 
     setLoading(true);
-    const [foldersResult, itemsResult] = await Promise.allSettled([
+    const [foldersResult, itemsResult, examsResult] = await Promise.allSettled([
       getFolders(null),
       getItems(folderIdNum),
+      getExams(),
     ]);
 
     let all = [];
     let its = [];
+    let exs = [];
 
     if (foldersResult.status === 'fulfilled') {
       all = Array.isArray(foldersResult.value) ? foldersResult.value : [];
@@ -68,11 +71,16 @@ export default function FolderView() {
       its = Array.isArray(itemsResult.value) ? itemsResult.value : [];
     }
 
+    if (examsResult.status === 'fulfilled') {
+      exs = Array.isArray(examsResult.value) ? examsResult.value : [];
+    }
+
     const flat = flattenFolders(all);
     const cur  = flat.find(f => String(f.id) === String(folderIdNum));
     setFolder(cur || null);
     setSubfolders(cur?.children || []);
     setItems(its);
+    setExams(exs);
     setAllFolders(flat.map(f => ({ id: f.id, name: f.name, path: f.path || f.name })));
 
     if (foldersResult.status === 'rejected' && itemsResult.status === 'rejected') {
@@ -124,11 +132,47 @@ export default function FolderView() {
       ? currentTags.filter(t => t !== tag)
       : [...currentTags, tag];
 
+    const isAddingRevision = tag === 'revision' && !hasTag;
+    const isRemovingRevision = tag === 'revision' && hasTag;
+
+    if (isAddingRevision && exams.length === 0) {
+      toast.error('Add an exam first before linking revision items');
+      return;
+    }
+
+    let nextExamId = item.examId ?? null;
+    if (isAddingRevision && !nextExamId && exams[0]?.id) {
+      nextExamId = exams[0].id;
+    }
+    if (isRemovingRevision || !nextTags.includes('revision')) {
+      nextExamId = null;
+    }
+
     try {
-      const updated = await updateItemTags(item.id, nextTags);
-      setItems(prev => prev.map(existing => existing.id === item.id ? { ...existing, tags: updated.tags || [] } : existing));
+      const updated = await updateItemTags(item.id, nextTags, nextExamId);
+      setItems(prev => prev.map(existing => existing.id === item.id
+        ? { ...existing, tags: updated.tags || [], examId: updated.examId ?? null }
+        : existing));
     } catch (error) {
       const message = error?.response?.data?.message || 'Failed to update tag';
+      toast.error(message);
+    }
+  };
+
+  const handleRevisionExamChange = async (item, examIdValue) => {
+    const currentTags = Array.isArray(item.tags) ? item.tags : [];
+    if (!currentTags.includes('revision')) {
+      return;
+    }
+
+    const nextExamId = examIdValue ? Number(examIdValue) : null;
+    try {
+      const updated = await updateItemTags(item.id, currentTags, nextExamId);
+      setItems(prev => prev.map(existing => existing.id === item.id
+        ? { ...existing, tags: updated.tags || [], examId: updated.examId ?? null }
+        : existing));
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to link exam';
       toast.error(message);
     }
   };
@@ -194,6 +238,11 @@ export default function FolderView() {
     if (filter === 'Starred') return item.starred;
     return item.type === filter.toUpperCase();
   });
+
+  const examNameById = exams.reduce((acc, exam) => {
+    acc[String(exam.id)] = exam.subject;
+    return acc;
+  }, {});
 
   const openItem = (item) => {
     if (item.type === 'NOTE') {
@@ -349,6 +398,29 @@ export default function FolderView() {
                         );
                       })}
                     </div>
+
+                    {(item.tags || []).includes('revision') && (
+                      <div className="revision-link-row" onClick={(e) => e.stopPropagation()}>
+                        <span className="revision-link-label">Exam:</span>
+                        {exams.length === 0 ? (
+                          <span className="revision-link-empty">No exams found</span>
+                        ) : (
+                          <select
+                            className="revision-link-select"
+                            value={item.examId || ''}
+                            onChange={(e) => handleRevisionExamChange(item, e.target.value)}
+                          >
+                            <option value="">Select exam</option>
+                            {exams.map(exam => (
+                              <option key={exam.id} value={exam.id}>{exam.subject}</option>
+                            ))}
+                          </select>
+                        )}
+                        {item.examId && examNameById[String(item.examId)] && (
+                          <span className="revision-link-current">{examNameById[String(item.examId)]}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="list-actions" onClick={e => e.stopPropagation()}>
                     <button
