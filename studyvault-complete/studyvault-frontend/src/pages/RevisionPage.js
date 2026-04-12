@@ -14,6 +14,9 @@ export default function RevisionPage() {
     getExams().then(setExams).catch(() => {});
   }, []);
 
+  const getExamRevisionItems = (examId) =>
+    revisionItems.filter(item => String(item.examId || '') === String(examId || ''));
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -32,7 +35,34 @@ export default function RevisionPage() {
                 <div className="pack-card card" key={e.id}>
                   <div className="pack-name">{e.subject}</div>
                   <div className="pack-date">{new Date(e.examDate).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}</div>
-                  <div className="pack-items">{revisionItems.length} revision items to review</div>
+
+                  {getExamRevisionItems(e.id).length > 0 ? (
+                    <div className="pack-linked-list">
+                      {getExamRevisionItems(e.id).map(item => (
+                        <div className="pack-linked-item" key={item.id}>
+                          <span className="pack-linked-dot">•</span>
+                          <span className="pack-linked-title">{item.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="pack-items">No linked revision items yet</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {revisionItems.some(item => !item.examId) && (
+          <div className="section">
+            <div className="sec-label">🏷️ Unassigned revision items</div>
+            <div className="pack-grid">
+              {revisionItems.filter(item => !item.examId).map(item => (
+                <div className="pack-card card" key={item.id}>
+                  <div className="pack-name">{item.title}</div>
+                  <div className="pack-date">Not linked to any exam yet</div>
+                  <div className="pack-items">Link this item to an exam from the item card or Add Item form</div>
                 </div>
               ))}
             </div>
