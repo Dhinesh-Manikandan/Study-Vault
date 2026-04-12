@@ -239,7 +239,7 @@ export default function Dashboard() {
                           {exam.examTime ? ` · ${exam.examTime}` : ''}
                         </div>
                         <div className="exam-prog">
-                          <div className="exam-prog-fill" style={{ width: `${Math.min(100, (30 - countdown.days) / 30 * 100)}%`, background: c.bar }} />
+                          <div className="exam-prog-fill" style={{ width: `${Math.max(0, Math.min(100, (30 - countdown.days) / 30 * 100))}%`, background: c.bar }} />
                         </div>
                       </div>
                       <button className="exam-del" onClick={() => handleDeleteExam(exam.id)}>✕</button>
