@@ -89,6 +89,9 @@ export const toggleStar = (id) =>
 export const updateItemTags = (id, tags, examId) =>
   api.patch(`/items/${id}/tags`, { tags, examId }).then(r => r.data);
 
+export const moveItem = (id, folderId) =>
+  api.patch(`/items/${id}/move`, { folderId: Number(folderId) }).then(r => r.data);
+
 export const updateFolderRevision = (folderId, enabled) =>
   api.patch(`/items/folders/${folderId}/revision`, { enabled }).then(r => r.data);
 

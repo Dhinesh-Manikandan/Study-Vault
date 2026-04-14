@@ -67,6 +67,11 @@
   color: var(--text3);
 }
 .upload-zone:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+.upload-zone.drag-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-light) 70%, #ffffff 30%);
+  color: var(--accent);
+}
 .upload-icon { font-size: 1.7rem; display: block; margin-bottom: 0.35rem; }
 .upload-text { font-size: 0.76rem; font-weight: 500; }
 .upload-sub  { font-size: 0.66rem; margin-top: 0.12rem; }

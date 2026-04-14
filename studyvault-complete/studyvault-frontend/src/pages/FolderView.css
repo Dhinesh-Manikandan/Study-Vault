@@ -44,7 +44,33 @@
 .list-detail { font-size: 0.75rem; color: var(--text3); margin-top: 0.06rem; line-height: 1.55; }
 .list-url    { color: var(--blue); }
 .note-preview { font-size: 0.92rem; color: var(--text); font-weight: 500; }
+.item-location {
+	margin-top: 0.22rem;
+	font-size: 0.66rem;
+	color: var(--text3);
+}
 .list-tags   { display: flex; gap: 0.3rem; margin-top: 0.28rem; flex-wrap: wrap; }
+.item-move-row {
+	margin-top: 0.35rem;
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+}
+.item-move-label {
+	font-size: 0.66rem;
+	color: var(--text3);
+}
+.item-move-select {
+	flex: 1;
+	min-width: 190px;
+	font-size: 0.68rem;
+	border: 1px solid var(--border);
+	border-radius: 7px;
+	background: var(--surface);
+	color: var(--text2);
+	padding: 0.22rem 0.45rem;
+}
 .revision-link-row {
 	margin-top: 0.35rem;
 	display: flex;

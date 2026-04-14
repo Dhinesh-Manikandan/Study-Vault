@@ -135,6 +135,34 @@ public class ItemController {
         }
     }
 
+    @PatchMapping("/{id}/move")
+    public ResponseEntity<?> moveItem(Authentication auth,
+                                      @PathVariable Long id,
+                                      @RequestBody Map<String, Object> body) {
+        Object folderIdRaw = body.get("folderId");
+        if (folderIdRaw == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Destination folder is required"));
+        }
+
+        Long folderId;
+        try {
+            folderId = Long.valueOf(String.valueOf(folderIdRaw));
+        } catch (NumberFormatException ex) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid destination folder"));
+        }
+
+        try {
+            Item moved = itemService.moveItem(auth.getName(), id, folderId);
+            return ResponseEntity.ok(moved);
+        } catch (ResponseStatusException ex) {
+            String message = ex.getReason() != null ? ex.getReason() : "Failed to move item";
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Failed to move item"));
+        }
+    }
+
     @PatchMapping("/folders/{folderId}/revision")
     public ResponseEntity<?> updateFolderRevision(Authentication auth,
                                                    @PathVariable Long folderId,

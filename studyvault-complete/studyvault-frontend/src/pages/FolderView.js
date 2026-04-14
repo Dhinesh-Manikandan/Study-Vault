@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision } from '../services/api';
+import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem } from '../services/api';
 import './FolderView.css';
 
 const TYPE_META = {
@@ -180,6 +180,23 @@ export default function FolderView() {
       load();
     } catch (error) {
       const message = error?.response?.data?.message || 'Failed to update folder revision';
+      toast.error(message);
+    }
+  };
+
+  const handleMoveItem = async (item, destinationFolderIdValue) => {
+    const destinationFolderId = Number(destinationFolderIdValue);
+    if (!destinationFolderId || destinationFolderId === Number(item.folderId)) {
+      return;
+    }
+
+    try {
+      const moved = await moveItem(item.id, destinationFolderId);
+      const destinationName = moved?.folderPath || allFolders.find(f => Number(f.id) === destinationFolderId)?.path;
+      toast.success(destinationName ? `Moved to ${destinationName}` : 'Item moved successfully');
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to move item';
       toast.error(message);
     }
   };
@@ -370,6 +387,9 @@ export default function FolderView() {
                       {item.type === 'NOTE' && item.content && <NotePreview text={item.content} label="note content" />}
                       {item.notes && <NotePreview text={item.notes} label="personal note" />}
                     </div>
+                    <div className="item-location">
+                      📁 {item.folderPath || folder?.path || folder?.name || 'Unknown folder'}
+                    </div>
                     <div className="list-tags">
                       {ITEM_TAGS.map(tag => {
                         const selected = (item.tags || []).includes(tag);
@@ -412,6 +432,19 @@ export default function FolderView() {
                         )}
                       </div>
                     )}
+
+                    <div className="item-move-row" onClick={(e) => e.stopPropagation()}>
+                      <span className="item-move-label">Move to:</span>
+                      <select
+                        className="item-move-select"
+                        value={item.folderId || ''}
+                        onChange={(e) => handleMoveItem(item, e.target.value)}
+                      >
+                        {allFolders.map(targetFolder => (
+                          <option key={targetFolder.id} value={targetFolder.id}>{targetFolder.path || targetFolder.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="list-actions" onClick={e => e.stopPropagation()}>
                     <button

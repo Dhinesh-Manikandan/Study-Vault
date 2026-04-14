@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { createItem, getExams, uploadItem } from '../../services/api';
 import './AddItem.css';
@@ -13,10 +13,47 @@ const TYPES = [
 
 const TAGS = ['important', 'confusing', 'revision'];
 const MAX_NOTE_WORDS = 2000;
+const DOC_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx']);
+const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif']);
 
 const countWords = (text = '') => {
   const trimmed = text.trim();
   return trimmed ? trimmed.split(/\s+/).length : 0;
+};
+
+const extensionFromFile = (fileObj) => {
+  const name = (fileObj?.name || '').toLowerCase();
+  const dotIndex = name.lastIndexOf('.');
+  if (dotIndex < 0 || dotIndex === name.length - 1) return '';
+  return name.slice(dotIndex + 1);
+};
+
+const inferTypeFromFile = (fileObj) => {
+  if (!fileObj) return null;
+  const ext = extensionFromFile(fileObj);
+  if (DOC_EXTENSIONS.has(ext)) return 'PDF';
+  if (IMAGE_EXTENSIONS.has(ext) || (fileObj.type || '').startsWith('image/')) return 'IMAGE';
+  return null;
+};
+
+const extractClipboardFile = (clipboardData) => {
+  if (!clipboardData) return null;
+
+  if (clipboardData.files && clipboardData.files.length > 0) {
+    return clipboardData.files[0];
+  }
+
+  const { items } = clipboardData;
+  if (!items || items.length === 0) return null;
+
+  for (const entry of items) {
+    if (entry.kind === 'file') {
+      const fileObj = entry.getAsFile();
+      if (fileObj) return fileObj;
+    }
+  }
+
+  return null;
 };
 
 export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
@@ -31,6 +68,11 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
   const [exams, setExams]     = useState([]);
   const [selectedExamId, setSelectedExamId] = useState('');
   const [saving, setSaving]   = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const needsUrl     = ['YOUTUBE', 'LINK'].includes(type);
+  const needsFile    = ['PDF', 'IMAGE'].includes(type);
+  const needsContent = type === 'NOTE';
 
   useEffect(() => {
     getExams().then((data) => {
@@ -39,6 +81,41 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
       setExams([]);
     });
   }, []);
+
+  const attachFile = useCallback((fileObj, source = 'upload') => {
+    if (!fileObj) return;
+
+    const inferredType = inferTypeFromFile(fileObj);
+    if (!inferredType) {
+      toast.error('Unsupported file. Use PDF, Office docs, or image formats.');
+      return;
+    }
+
+    if (type !== inferredType) {
+      setType(inferredType);
+      if (source !== 'picker') {
+        toast(`Switched item type to ${inferredType === 'PDF' ? 'PDF/Doc' : 'Photo'}`);
+      }
+    }
+
+    setFile(fileObj);
+  }, [type]);
+
+  useEffect(() => {
+    if (!needsFile) {
+      return undefined;
+    }
+
+    const onWindowPaste = (event) => {
+      const clipboardFile = extractClipboardFile(event.clipboardData);
+      if (!clipboardFile) return;
+      event.preventDefault();
+      attachFile(clipboardFile, 'paste');
+    };
+
+    window.addEventListener('paste', onWindowPaste);
+    return () => window.removeEventListener('paste', onWindowPaste);
+  }, [needsFile, attachFile]);
 
   const toggleTag = (t) => {
     setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
@@ -104,10 +181,6 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
     }
   };
 
-  const needsUrl     = ['YOUTUBE', 'LINK'].includes(type);
-  const needsFile    = ['PDF', 'IMAGE'].includes(type);
-  const needsContent = type === 'NOTE';
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
@@ -160,15 +233,34 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
         {needsFile && (
           <div className="form-group">
             <label>Upload File</label>
-            <label className="upload-zone">
+            <label
+              className={`upload-zone ${isDragActive ? 'drag-active' : ''}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragActive(true);
+              }}
+              onDragLeave={() => setIsDragActive(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragActive(false);
+                const droppedFile = e.dataTransfer?.files?.[0];
+                attachFile(droppedFile, 'drop');
+              }}
+              onPaste={(e) => {
+                const clipboardFile = extractClipboardFile(e.clipboardData);
+                if (!clipboardFile) return;
+                e.preventDefault();
+                attachFile(clipboardFile, 'paste');
+              }}
+            >
               <span className="upload-icon">☁️</span>
-              <span className="upload-text">{file ? file.name : 'Click to choose file'}</span>
+              <span className="upload-text">{file ? file.name : 'Click, paste, or drag a file here'}</span>
               <span className="upload-sub">{type === 'PDF' ? 'PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX' : 'JPG, PNG, HEIC'}</span>
               <input
                 type="file"
                 hidden
                 accept={type === 'PDF' ? '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx' : 'image/*'}
-                onChange={e => setFile(e.target.files[0])}
+                onChange={e => attachFile(e.target.files?.[0], 'picker')}
               />
             </label>
           </div>

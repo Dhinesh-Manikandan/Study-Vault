@@ -18,6 +18,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
        boolean existsByUserIdAndFolderIdAndTitleIgnoreCase(String userId, Long folderId, String title);
 
+       boolean existsByUserIdAndFolderIdAndTitleIgnoreCaseAndIdNot(String userId, Long folderId, String title, Long id);
+
     List<Item> findByUserIdAndStarredTrueOrderByCreatedAtDesc(String userId);
 
        List<Item> findByUserIdOrderByCreatedAtDesc(String userId);

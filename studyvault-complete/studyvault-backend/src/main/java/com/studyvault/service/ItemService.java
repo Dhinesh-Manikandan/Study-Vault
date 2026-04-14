@@ -277,6 +277,42 @@ public class ItemService {
         return itemRepo.save(item);
     }
 
+    public Item moveItem(String userId, Long itemId, Long destinationFolderId) {
+        Item item = itemRepo.findById(itemId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
+
+        if (!userId.equals(item.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot move this item");
+        }
+
+        Folder destinationFolder = folderRepo.findById(destinationFolderId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination folder not found"));
+
+        if (!userId.equals(destinationFolder.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot move items into this folder");
+        }
+
+        Long currentFolderId = item.getFolder() != null ? item.getFolder().getId() : null;
+        if (Objects.equals(currentFolderId, destinationFolderId)) {
+            return item;
+        }
+
+        boolean duplicateInDestination = itemRepo.existsByUserIdAndFolderIdAndTitleIgnoreCaseAndIdNot(
+            userId,
+            destinationFolderId,
+            item.getTitle() == null ? "" : item.getTitle().trim(),
+            item.getId()
+        );
+
+        if (duplicateInDestination) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "An item with this name already exists in the destination folder");
+        }
+
+        item.setFolder(destinationFolder);
+        return itemRepo.save(item);
+    }
+
     public Map<String, Object> updateFolderRevisionTags(String userId, Long folderId, boolean enabled) {
         Folder folder = folderRepo.findById(folderId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
