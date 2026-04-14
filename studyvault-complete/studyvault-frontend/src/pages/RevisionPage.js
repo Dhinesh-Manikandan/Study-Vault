@@ -1,61 +1,24 @@
 // RevisionPage.js — Revision packs + Revision items list
 import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getRevisionItems, getExams, getFolders, openItemFile, openNoteItem, moveItem } from '../services/api';
+import { getRevisionItems, getExams, openItemFile, openNoteItem } from '../services/api';
 import './Revision.css';
-
-function flattenFolders(folders, parentPath = '') {
-  return folders.flatMap((folder) => {
-    const path = parentPath ? `${parentPath} › ${folder.name}` : folder.name;
-    return [{ ...folder, path }, ...flattenFolders(folder.children || [], path)];
-  });
-}
 
 export default function RevisionPage() {
   const [revisionItems, setRevisionItems] = useState([]);
   const [exams, setExams] = useState([]);
-  const [allFolders, setAllFolders] = useState([]);
 
   useEffect(() => {
-    Promise.allSettled([getRevisionItems(), getExams(), getFolders(null)]).then(([itemsRes, examsRes, foldersRes]) => {
+    Promise.allSettled([getRevisionItems(), getExams()]).then(([itemsRes, examsRes]) => {
       if (itemsRes.status === 'fulfilled') {
         setRevisionItems(Array.isArray(itemsRes.value) ? itemsRes.value : []);
       }
       if (examsRes.status === 'fulfilled') {
         setExams(Array.isArray(examsRes.value) ? examsRes.value : []);
       }
-      if (foldersRes.status === 'fulfilled') {
-        const flatFolders = flattenFolders(Array.isArray(foldersRes.value) ? foldersRes.value : []);
-        setAllFolders(flatFolders.map((folder) => ({ id: folder.id, path: folder.path || folder.name })));
-      }
     });
   }, []);
-
-  const handleMoveItem = async (item, destinationFolderIdValue) => {
-    const destinationFolderId = Number(destinationFolderIdValue);
-    if (!destinationFolderId || destinationFolderId === Number(item.folderId)) {
-      return;
-    }
-
-    try {
-      const moved = await moveItem(item.id, destinationFolderId);
-      setRevisionItems((prev) => prev.map((existing) => (
-        existing.id === item.id
-          ? {
-              ...existing,
-              folderId: moved.folderId,
-              folderPath: moved.folderPath,
-            }
-          : existing
-      )));
-      toast.success('Item location updated');
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to move item';
-      toast.error(message);
-    }
-  };
 
   const getExamRevisionItems = (examId) =>
     revisionItems.filter(item => String(item.examId || '') === String(examId || ''));
@@ -142,23 +105,6 @@ export default function RevisionPage() {
                     {item.notes && (
                       <NotePreview text={item.notes} className="revision-note-preview" label="personal note" />
                     )}
-
-                    <div className="revision-location">
-                      📁 {item.folderPath || 'Unknown folder'}
-                    </div>
-
-                    <div className="revision-move-row">
-                      <span className="revision-move-label">Move to:</span>
-                      <select
-                        className="revision-move-select"
-                        value={item.folderId || ''}
-                        onChange={(e) => handleMoveItem(item, e.target.value)}
-                      >
-                        {allFolders.map((folder) => (
-                          <option key={folder.id} value={folder.id}>{folder.path}</option>
-                        ))}
-                      </select>
-                    </div>
 
                     <div className="revision-card-footer">
                       {(item.url || item.fileUrl) && (

@@ -44,32 +44,34 @@
 .list-detail { font-size: 0.75rem; color: var(--text3); margin-top: 0.06rem; line-height: 1.55; }
 .list-url    { color: var(--blue); }
 .note-preview { font-size: 0.92rem; color: var(--text); font-weight: 500; }
-.item-location {
-	margin-top: 0.22rem;
-	font-size: 0.66rem;
-	color: var(--text3);
-}
 .list-tags   { display: flex; gap: 0.3rem; margin-top: 0.28rem; flex-wrap: wrap; }
 .item-move-row {
-	margin-top: 0.35rem;
+	margin-top: 0.32rem;
 	display: flex;
 	align-items: center;
-	gap: 0.4rem;
+	gap: 0.35rem;
 	flex-wrap: wrap;
+	opacity: 0.72;
+	transition: opacity 0.15s ease;
 }
 .item-move-label {
-	font-size: 0.66rem;
+	font-size: 0.61rem;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
 	color: var(--text3);
 }
 .item-move-select {
-	flex: 1;
-	min-width: 190px;
-	font-size: 0.68rem;
-	border: 1px solid var(--border);
+	min-width: 165px;
+	max-width: 235px;
+	font-size: 0.64rem;
+	border: 1px dashed var(--border2);
 	border-radius: 7px;
-	background: var(--surface);
+	background: color-mix(in srgb, var(--surface2) 70%, #ffffff 30%);
 	color: var(--text2);
-	padding: 0.22rem 0.45rem;
+	padding: 0.16rem 0.38rem;
+}
+.list-item:hover .item-move-row {
+	opacity: 1;
 }
 .revision-link-row {
 	margin-top: 0.35rem;

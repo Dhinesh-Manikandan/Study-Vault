@@ -387,9 +387,6 @@ export default function FolderView() {
                       {item.type === 'NOTE' && item.content && <NotePreview text={item.content} label="note content" />}
                       {item.notes && <NotePreview text={item.notes} label="personal note" />}
                     </div>
-                    <div className="item-location">
-                      📁 {item.folderPath || folder?.path || folder?.name || 'Unknown folder'}
-                    </div>
                     <div className="list-tags">
                       {ITEM_TAGS.map(tag => {
                         const selected = (item.tags || []).includes(tag);
@@ -434,7 +431,7 @@ export default function FolderView() {
                     )}
 
                     <div className="item-move-row" onClick={(e) => e.stopPropagation()}>
-                      <span className="item-move-label">Move to:</span>
+                      <span className="item-move-label">Move</span>
                       <select
                         className="item-move-select"
                         value={item.folderId || ''}

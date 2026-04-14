@@ -134,36 +134,6 @@
   line-height: 1.5;
 }
 
-.revision-location {
-  margin-top: 0.45rem;
-  font-size: 0.67rem;
-  color: var(--text3);
-}
-
-.revision-move-row {
-  margin-top: 0.36rem;
-  display: flex;
-  align-items: center;
-  gap: 0.42rem;
-  flex-wrap: wrap;
-}
-
-.revision-move-label {
-  font-size: 0.66rem;
-  color: var(--text3);
-}
-
-.revision-move-select {
-  flex: 1;
-  min-width: 170px;
-  font-size: 0.67rem;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--surface);
-  color: var(--text2);
-  padding: 0.2rem 0.45rem;
-}
-
 .revision-card-footer {
   display: flex;
   align-items: center;
