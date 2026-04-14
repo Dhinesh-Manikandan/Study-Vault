@@ -132,7 +132,7 @@ The backend Dockerfile is in:
 
 Set the following in Render service -> Environment:
 
-- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_URL` or Render's `DATABASE_URL` / `JDBC_DATABASE_URL`
 - `SPRING_DATASOURCE_USERNAME`
 - `SPRING_DATASOURCE_PASSWORD`
 - `APP_JWT_SECRET`
@@ -185,6 +185,7 @@ Pooler username format can be:
 ### Render DB env mapping
 
 - `SPRING_DATASOURCE_URL=<jdbc-url>`
+- or `DATABASE_URL=postgres://...` from Render Postgres / `JDBC_DATABASE_URL=jdbc:postgresql://...`
 - `SPRING_DATASOURCE_USERNAME=<supabase-db-user>`
 - `SPRING_DATASOURCE_PASSWORD=<supabase-db-password>`
 
