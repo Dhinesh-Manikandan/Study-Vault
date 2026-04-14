@@ -106,6 +106,10 @@ export default function RevisionPage() {
                       <NotePreview text={item.notes} className="revision-note-preview" label="personal note" />
                     )}
 
+                    {item.folderPath && (
+                      <div className="revision-location">📁 {item.folderPath}</div>
+                    )}
+
                     <div className="revision-card-footer">
                       {(item.url || item.fileUrl) && (
                         <button

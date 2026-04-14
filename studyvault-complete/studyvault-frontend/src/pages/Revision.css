@@ -134,6 +134,13 @@
   line-height: 1.5;
 }
 
+.revision-location {
+  margin-top: 0.45rem;
+  font-size: 0.67rem;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
 .revision-card-footer {
   display: flex;
   align-items: center;
