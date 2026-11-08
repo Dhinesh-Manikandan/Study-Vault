@@ -18,9 +18,9 @@ import com.zaxxer.hikari.HikariDataSource;
 @Configuration
 public class DatabaseConfig {
 
-    private static final String DEFAULT_JDBC_URL = "jdbc:postgresql://localhost:5432/studyvault?sslmode=require&prepareThreshold=0";
-    private static final String DEFAULT_USERNAME = "postgres";
-    private static final String DEFAULT_PASSWORD = "postgres";
+    private static final String DEFAULT_JDBC_URL = "jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0";
+    private static final String DEFAULT_USERNAME = "postgres.migeuxqmrcwhstifeysn";
+    private static final String DEFAULT_PASSWORD = "Dhinesh@2006";
 
     @Bean
     @Primary
