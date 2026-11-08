@@ -42,6 +42,9 @@ public class DatabaseConfig {
         config.setMaximumPoolSize(5);
         config.setMinimumIdle(1);
         config.setConnectionTimeout(30000);
+        config.setMaxLifetime(60000);
+        config.setIdleTimeout(30000);
+        config.setKeepaliveTime(30000);
 
         return new HikariDataSource(config);
     }
@@ -73,10 +76,9 @@ public class DatabaseConfig {
         String parsedPassword = extractUserInfo(rawUrl, false);
 
         return new ResolvedDatabaseSettings(
-            jdbcUrl,
-            explicitUsername != null ? explicitUsername : parsedUsername,
-            explicitPassword != null ? explicitPassword : parsedPassword
-        );
+                jdbcUrl,
+                explicitUsername != null ? explicitUsername : parsedUsername,
+                explicitPassword != null ? explicitPassword : parsedPassword);
     }
 
     private String normalizeJdbcUrl(String rawUrl) {
@@ -110,8 +112,8 @@ public class DatabaseConfig {
 
             int separatorIndex = userInfo.indexOf(':');
             String value = username
-                ? (separatorIndex >= 0 ? userInfo.substring(0, separatorIndex) : userInfo)
-                : (separatorIndex >= 0 ? userInfo.substring(separatorIndex + 1) : null);
+                    ? (separatorIndex >= 0 ? userInfo.substring(0, separatorIndex) : userInfo)
+                    : (separatorIndex >= 0 ? userInfo.substring(separatorIndex + 1) : null);
 
             return trimToNull(decode(value));
         } catch (URISyntaxException ex) {

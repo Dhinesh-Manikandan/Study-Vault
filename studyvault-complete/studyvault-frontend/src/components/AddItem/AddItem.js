@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { createItem, getExams, uploadItem } from '../../services/api';
+import { createItem, getExams, getFolders, updateItem, updateItemUpload, uploadItem } from '../../services/api';
 import './AddItem.css';
 
 const TYPES = [
@@ -57,19 +57,28 @@ const extractClipboardFile = (clipboardData) => {
   return null;
 };
 
-export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
-  const [type, setType]       = useState('YOUTUBE');
-  const [title, setTitle]     = useState('');
-  const [url, setUrl]         = useState('');
-  const [content, setContent] = useState('');
-  const [folder, setFolder]   = useState(folderId || '');
-  const [tags, setTags]       = useState([]);
+export default function AddItem({ folderId, folders = [], onClose, onSaved, itemToEdit = null }) {
+  const isEdit = Boolean(itemToEdit);
+
+  const [type, setType]       = useState(itemToEdit?.type || 'YOUTUBE');
+  const [title, setTitle]     = useState(itemToEdit?.title || '');
+  const [url, setUrl]         = useState(itemToEdit?.url || '');
+  const [content, setContent] = useState(itemToEdit?.content || '');
+  const [folder, setFolder]   = useState(itemToEdit?.folderId || itemToEdit?.folder?.id || folderId || '');
+  const [tags, setTags]       = useState(
+    Array.isArray(itemToEdit?.tags)
+      ? itemToEdit.tags
+      : (itemToEdit?.tags ? String(itemToEdit.tags).split(',').filter(Boolean) : [])
+  );
   const [file, setFile]       = useState(null);
-  const [notes, setNotes]     = useState('');
+  const [notes, setNotes]     = useState(itemToEdit?.notes || '');
   const [exams, setExams]     = useState([]);
-  const [selectedExamId, setSelectedExamId] = useState('');
+  const [selectedExamId, setSelectedExamId] = useState(
+    itemToEdit?.examId ? String(itemToEdit.examId) : (itemToEdit?.exam?.id ? String(itemToEdit.exam.id) : '')
+  );
   const [saving, setSaving]   = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [folderList, setFolderList] = useState(folders);
 
   const needsUrl     = ['YOUTUBE', 'LINK'].includes(type);
   const needsFile    = ['PDF', 'IMAGE'].includes(type);
@@ -82,6 +91,16 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
       setExams([]);
     });
   }, []);
+
+  useEffect(() => {
+    if (folders && folders.length > 0) {
+      setFolderList(folders);
+    } else {
+      getFolders(null).then((data) => {
+        setFolderList(Array.isArray(data) ? data : []);
+      }).catch(() => {});
+    }
+  }, [folders]);
 
   const attachFile = useCallback((fileObj, source = 'upload') => {
     if (!fileObj) return;
@@ -138,6 +157,15 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
       return toast.error('Please add a valid URL');
     }
 
+    if (needsContent && !content.trim()) {
+      return toast.error('Please write note content');
+    }
+
+    const hasExistingFile = isEdit && (itemToEdit.type === type) && Boolean(itemToEdit.fileUrl || itemToEdit.url);
+    if (needsFile && !file && !hasExistingFile) {
+      return toast.error('Please choose a file to upload');
+    }
+
     const contentWordCount = countWords(content);
     if (needsContent && contentWordCount > MAX_NOTE_WORDS) {
       return toast.error(`Note content cannot exceed ${MAX_NOTE_WORDS} words`);
@@ -152,31 +180,59 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
 
     setSaving(true);
     try {
-      if (file) {
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('title', title);
-        fd.append('folderId', folder);
-        fd.append('type', type);
-        fd.append('tags', tags.join(','));
-        fd.append('notes', notes);
-        if (hasRevisionTag && selectedExamId) {
-          fd.append('examId', selectedExamId);
+      if (isEdit) {
+        if (file) {
+          const fd = new FormData();
+          fd.append('file', file);
+          fd.append('title', title.trim());
+          fd.append('folderId', folder);
+          fd.append('type', type);
+          fd.append('tags', tags.join(','));
+          fd.append('notes', notes.trim());
+          if (hasRevisionTag && selectedExamId) {
+            fd.append('examId', selectedExamId);
+          }
+          await updateItemUpload(itemToEdit.id, fd);
+        } else {
+          await updateItem(itemToEdit.id, {
+            title: title.trim(),
+            url: needsUrl ? url.trim() : null,
+            content: needsContent ? content : null,
+            type,
+            folderId: folder,
+            tags,
+            notes: notes.trim(),
+            examId: hasRevisionTag && selectedExamId ? Number(selectedExamId) : null,
+          });
         }
-        await uploadItem(fd);
+        toast.success('Item updated successfully!');
       } else {
-        await createItem({
-          title,
-          url,
-          content,
-          type,
-          folderId: folder,
-          tags,
-          notes,
-          examId: hasRevisionTag && selectedExamId ? Number(selectedExamId) : null,
-        });
+        if (file) {
+          const fd = new FormData();
+          fd.append('file', file);
+          fd.append('title', title.trim());
+          fd.append('folderId', folder);
+          fd.append('type', type);
+          fd.append('tags', tags.join(','));
+          fd.append('notes', notes.trim());
+          if (hasRevisionTag && selectedExamId) {
+            fd.append('examId', selectedExamId);
+          }
+          await uploadItem(fd);
+        } else {
+          await createItem({
+            title: title.trim(),
+            url: needsUrl ? url.trim() : null,
+            content: needsContent ? content : null,
+            type,
+            folderId: folder,
+            tags,
+            notes: notes.trim(),
+            examId: hasRevisionTag && selectedExamId ? Number(selectedExamId) : null,
+          });
+        }
+        toast.success('Saved to StudyVault!');
       }
-      toast.success('Saved to StudyVault!');
       onSaved?.();
       onClose();
     } catch (e) {
@@ -187,13 +243,17 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
     }
   };
 
+  const hasExistingFile = isEdit && (itemToEdit?.type === type) && Boolean(itemToEdit?.fileUrl || itemToEdit?.url);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <h2 className="modal-title">Add to StudyVault</h2>
-            <p className="modal-sub">Save a resource into your folder</p>
+            <h2 className="modal-title">{isEdit ? 'Edit Item' : 'Add to StudyVault'}</h2>
+            <p className="modal-sub">
+              {isEdit ? 'Update details or switch to a different file type' : 'Save a resource into your folder'}
+            </p>
           </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
@@ -260,8 +320,16 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
               }}
             >
               <span className="upload-icon">☁️</span>
-              <span className="upload-text">{file ? file.name : 'Click, paste, or drag a file here'}</span>
-              <span className="upload-sub">{type === 'PDF' ? 'PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX' : 'JPG, PNG, HEIC'} · max 20 MB</span>
+              <span className="upload-text">
+                {file
+                  ? file.name
+                  : (hasExistingFile
+                    ? `Attached file: ${itemToEdit.title} (click or drag to replace)`
+                    : 'Click, paste, or drag a file here')}
+              </span>
+              <span className="upload-sub">
+                {type === 'PDF' ? 'PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX' : 'JPG, PNG, HEIC'} · max 20 MB
+              </span>
               <input
                 type="file"
                 hidden
@@ -296,7 +364,7 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
             onChange={e => setFolder(e.target.value)}
           >
             <option value="">— Select a folder —</option>
-            {folders.map(f => (
+            {folderList.map(f => (
               <option key={f.id} value={f.id}>{f.path || f.name}</option>
             ))}
           </select>
@@ -341,21 +409,21 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
           {tags.includes('revision') && (
             <div className="revision-exam-group">
               <label className="revision-exam-label">Linked Exam</label>
-                <select
-                  className="form-input"
-                  value={selectedExamId}
-                  onChange={(e) => setSelectedExamId(e.target.value)}
-                >
-                  <option value="">No exam mapping</option>
-                  {exams.map(exam => (
-                    <option key={exam.id} value={exam.id}>
-                      {exam.subject} ({new Date(exam.examDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
-                    </option>
-                  ))}
-                </select>
-                {exams.length === 0 && (
-                  <div className="tag-help">You can leave this item unmapped, or add an exam later.</div>
-                )}
+              <select
+                className="form-input"
+                value={selectedExamId}
+                onChange={(e) => setSelectedExamId(e.target.value)}
+              >
+                <option value="">No exam mapping</option>
+                {exams.map(exam => (
+                  <option key={exam.id} value={exam.id}>
+                    {exam.subject} ({new Date(exam.examDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
+                  </option>
+                ))}
+              </select>
+              {exams.length === 0 && (
+                <div className="tag-help">You can leave this item unmapped, or add an exam later.</div>
+              )}
             </div>
           )}
         </div>
@@ -374,7 +442,7 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
         <div className="modal-footer">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-            {saving ? <span className="spinner" /> : '✓ Save to Vault'}
+            {saving ? <span className="spinner" /> : (isEdit ? '✓ Update Item' : '✓ Save to Vault')}
           </button>
         </div>
       </div>

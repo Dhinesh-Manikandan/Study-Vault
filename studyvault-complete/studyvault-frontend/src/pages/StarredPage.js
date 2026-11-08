@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getStarredItems, toggleStar, openItemFile, openNoteItem, updateItem } from '../services/api';
+import AddItem from '../components/AddItem/AddItem';
+import { getStarredItems, toggleStar, openItemFile, openNoteItem } from '../services/api';
 import toast from 'react-hot-toast';
 
 const TYPE_META = {
@@ -15,6 +16,7 @@ const TYPE_META = {
 export default function StarredPage() {
   const [items,   setItems]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingItem, setEditingItem] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -30,20 +32,8 @@ export default function StarredPage() {
     catch { toast.error('Failed'); }
   };
 
-  const handleEditItem = async (item) => {
-    const nextTitle = window.prompt('Edit item title', item?.title || '');
-    if (nextTitle == null) return;
-    const trimmed = nextTitle.trim();
-    if (!trimmed || trimmed === item?.title) return;
-
-    try {
-      await updateItem(item.id, { title: trimmed });
-      toast.success('Item updated');
-      load();
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update item';
-      toast.error(message);
-    }
+  const handleEditItem = (item) => {
+    setEditingItem(item);
   };
 
   return (
@@ -115,6 +105,14 @@ export default function StarredPage() {
           </div>
         )}
       </div>
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={load}
+        />
+      )}
     </div>
   );
 }

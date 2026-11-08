@@ -320,6 +320,20 @@ public class ItemService {
             ? Objects.toString(body.get("notes"), "")
             : item.getNotes());
 
+        if (nextType == Item.Type.NOTE) {
+            normalizedUrl = null;
+            item.setFileUrl(null);
+        } else if (nextType == Item.Type.YOUTUBE || nextType == Item.Type.LINK) {
+            normalizedContent = null;
+            item.setFileUrl(null);
+        } else if (nextType == Item.Type.PDF || nextType == Item.Type.IMAGE) {
+            normalizedContent = null;
+            normalizedUrl = null;
+            if (item.getFileUrl() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please choose a file to upload for this type");
+            }
+        }
+
         validateItemPayload(nextType, normalizedUrl, normalizedContent, normalizedNotes);
 
         List<String> normalizedTags = item.getTags() == null ? List.of() : normalizeTags(item.getTags());
@@ -336,6 +350,88 @@ public class ItemService {
         item.setUrl(normalizedUrl);
         item.setContent(normalizedContent);
         item.setNotes(normalizedNotes);
+        item.setTags(normalizedTags);
+        item.setExamId(resolveExamId(userId, normalizedTags, examId));
+
+        return itemRepo.save(item);
+    }
+
+    public Item updateItemWithFile(String userId, Long id, MultipartFile file, String title,
+                                   Long folderId, Item.Type type,
+                                   List<String> tags, String notes, Long examId) throws IOException {
+        Item item = itemRepo.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
+
+        if (!userId.equals(item.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot update this item");
+        }
+
+        if (title == null || title.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
+        }
+
+        Folder folder = folderRepo.findById(folderId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
+        if (!userId.equals(folder.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot move items into this folder");
+        }
+
+        boolean duplicateExists = itemRepo.existsByUserIdAndFolderIdAndTitleIgnoreCaseAndIdNot(
+            userId, folderId, title.trim(), item.getId()
+        );
+        if (duplicateExists) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "An item with this title already exists in the selected folder");
+        }
+
+        if (file != null && !file.isEmpty()) {
+            String extension = getExtension(file.getOriginalFilename());
+            String contentType = Objects.toString(file.getContentType(), "").toLowerCase(Locale.ROOT);
+            if (type == Item.Type.PDF && !isAllowedDocumentUpload(extension, contentType)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unsupported document format. Use PDF, DOC, DOCX, PPT, PPTX, XLS, or XLSX");
+            }
+            if (type == Item.Type.IMAGE && !isAllowedImageUpload(extension, contentType)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unsupported image format. Use JPG, JPEG, PNG, WEBP, GIF, or HEIC");
+            }
+            if (file.getSize() > MAX_UPLOAD_BYTES) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "File is too large. Upload files must be 20 MB or smaller.");
+            }
+
+            String resourceType = (type == Item.Type.IMAGE) ? "image" : "raw";
+            Map<?, ?> result;
+            try {
+                result = cloudinary.uploader().upload(file.getBytes(),
+                    ObjectUtils.asMap(
+                        "folder", "studyvault/" + userId,
+                        "resource_type", resourceType,
+                        "use_filename", true,
+                        "unique_filename", true
+                    ));
+            } catch (IOException | RuntimeException ex) {
+                String message = ex.getMessage();
+                if (message == null || message.isBlank()) {
+                    message = "Upload failed for this file. Check format and size, then try again.";
+                }
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+            }
+            String fileUrl = (String) result.get("secure_url");
+            item.setFileUrl(fileUrl);
+        } else if (item.getFileUrl() == null && (type == Item.Type.PDF || type == Item.Type.IMAGE)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please choose a file to upload");
+        }
+
+        item.setTitle(title.trim());
+        item.setType(type);
+        item.setFolder(folder);
+        item.setUrl(null);
+        item.setContent(null);
+        String normalizedNotes = normalizeText(notes);
+        validateWordLimit(normalizedNotes, "Personal note");
+        item.setNotes(normalizedNotes);
+        List<String> normalizedTags = normalizeTags(tags);
         item.setTags(normalizedTags);
         item.setExamId(resolveExamId(userId, normalizedTags, examId));
 

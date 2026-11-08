@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem, updateItem, updateFolder } from '../services/api';
+import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem, updateFolder } from '../services/api';
 import './FolderView.css';
 
 const TYPE_META = {
@@ -37,6 +37,7 @@ export default function FolderView() {
   const [items,       setItems]       = useState([]);
   const [filter,      setFilter]      = useState('All');
   const [showAdd,     setShowAdd]     = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [showNewSub,  setShowNewSub]  = useState(false);
   const [newSubName,  setNewSubName]  = useState('');
   const [allFolders,  setAllFolders]  = useState([]);
@@ -257,20 +258,8 @@ export default function FolderView() {
     }
   };
 
-  const handleEditItem = async (item) => {
-    const nextTitle = window.prompt('Edit item title', item?.title || '');
-    if (nextTitle == null) return;
-    const trimmed = nextTitle.trim();
-    if (!trimmed || trimmed === item?.title) return;
-
-    try {
-      await updateItem(item.id, { title: trimmed });
-      toast.success('Item updated');
-      load();
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update item';
-      toast.error(message);
-    }
+  const handleEditItem = (item) => {
+    setEditingItem(item);
   };
 
   const filteredItems = items.filter(item => {
@@ -506,6 +495,16 @@ export default function FolderView() {
           folderId={id}
           folders={allFolders}
           onClose={() => setShowAdd(false)}
+          onSaved={load}
+        />
+      )}
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          folderId={editingItem.folderId || id}
+          folders={allFolders}
+          onClose={() => setEditingItem(null)}
           onSaved={load}
         />
       )}

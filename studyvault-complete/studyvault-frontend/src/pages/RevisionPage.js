@@ -1,14 +1,15 @@
 // RevisionPage.js — Revision packs + Revision items list
 import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getRevisionItems, getExams, openItemFile, openNoteItem, updateItem } from '../services/api';
+import AddItem from '../components/AddItem/AddItem';
+import { getRevisionItems, getExams, openItemFile, openNoteItem } from '../services/api';
 import './Revision.css';
 
 export default function RevisionPage() {
   const [revisionItems, setRevisionItems] = useState([]);
   const [exams, setExams] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
     Promise.allSettled([getRevisionItems(), getExams()]).then(([itemsRes, examsRes]) => {
@@ -24,21 +25,8 @@ export default function RevisionPage() {
   const getExamRevisionItems = (examId) =>
     revisionItems.filter(item => String(item.examId || '') === String(examId || ''));
 
-  const handleEditItem = async (item) => {
-    const nextTitle = window.prompt('Edit item title', item?.title || '');
-    if (nextTitle == null) return;
-    const trimmed = nextTitle.trim();
-    if (!trimmed || trimmed === item?.title) return;
-
-    try {
-      await updateItem(item.id, { title: trimmed });
-      toast.success('Item updated');
-      const refreshed = await getRevisionItems();
-      setRevisionItems(Array.isArray(refreshed) ? refreshed : []);
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update item';
-      toast.error(message);
-    }
+  const handleEditItem = (item) => {
+    setEditingItem(item);
   };
 
   return (
@@ -169,6 +157,17 @@ export default function RevisionPage() {
           )}
         </div>
       </div>
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={async () => {
+            const refreshed = await getRevisionItems();
+            setRevisionItems(Array.isArray(refreshed) ? refreshed : []);
+          }}
+        />
+      )}
     </div>
   );
 }

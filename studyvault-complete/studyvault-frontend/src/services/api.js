@@ -80,47 +80,52 @@ export const uploadItem = (formData) =>
 export const updateItem = (id, data) =>
   api.put(`/items/${id}`, data).then(r => r.data);
 
-export const deleteItem = (id) =>
-  api.delete(`/items/${id}`);
+export const updateItemUpload = (id, formData) =>
+    api.post(`/items/${id}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data);
 
-export const toggleStar = (id) =>
-  api.patch(`/items/${id}/star`).then(r => r.data);
+    export const deleteItem = (id) =>
+      api.delete(`/items/${id}`);
 
-export const updateItemTags = (id, tags, examId) =>
-  api.patch(`/items/${id}/tags`, { tags, examId }).then(r => r.data);
+    export const toggleStar = (id) =>
+      api.patch(`/items/${id}/star`).then(r => r.data);
 
-export const moveItem = (id, folderId) =>
-  api.patch(`/items/${id}/move`, { folderId: Number(folderId) }).then(r => r.data);
+    export const updateItemTags = (id, tags, examId) =>
+      api.patch(`/items/${id}/tags`, { tags, examId }).then(r => r.data);
 
-export const updateFolderRevision = (folderId, enabled) =>
-  api.patch(`/items/folders/${folderId}/revision`, { enabled }).then(r => r.data);
+    export const moveItem = (id, folderId) =>
+      api.patch(`/items/${id}/move`, { folderId: Number(folderId) }).then(r => r.data);
 
-export const openItemFile = async (id) => {
-  const response = await api.get(`/items/${id}/download`, { responseType: 'blob' });
-  const blobUrl = URL.createObjectURL(response.data);
-  window.open(blobUrl, '_blank', 'noopener,noreferrer');
-  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-};
+    export const updateFolderRevision = (folderId, enabled) =>
+      api.patch(`/items/folders/${folderId}/revision`, { enabled }).then(r => r.data);
 
-const escapeHtml = (value = '') =>
-  String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    export const openItemFile = async (id) => {
+      const response = await api.get(`/items/${id}/download`, { responseType: 'blob' });
+      const blobUrl = URL.createObjectURL(response.data);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    };
 
-export const openNoteItem = (item) => {
-  const noteBody = item?.content || item?.notes || 'No note content available.';
-  const noteWindow = window.open('', '_blank', 'noopener,noreferrer');
-  if (!noteWindow) {
-    return;
-  }
+    const escapeHtml = (value = '') =>
+      String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 
-  const safeTitle = escapeHtml(item?.title || 'Note');
-  const safeBody = escapeHtml(noteBody).replace(/\n/g, '<br>');
-  noteWindow.document.open();
-  noteWindow.document.write(`
+    export const openNoteItem = (item) => {
+      const noteBody = item?.content || item?.notes || 'No note content available.';
+      const noteWindow = window.open('', '_blank', 'noopener,noreferrer');
+      if (!noteWindow) {
+        return;
+      }
+
+      const safeTitle = escapeHtml(item?.title || 'Note');
+      const safeBody = escapeHtml(noteBody).replace(/\n/g, '<br>');
+      noteWindow.document.open();
+      noteWindow.document.write(`
     <!doctype html>
     <html>
       <head>
@@ -193,34 +198,34 @@ export const openNoteItem = (item) => {
       </body>
     </html>
   `);
-  noteWindow.document.close();
-};
+      noteWindow.document.close();
+    };
 
-// ── Search ────────────────────────────────────────────
-export const searchItems = (query = '', type = null, tag = null) =>
-  api.get('/items/search', { params: { q: query, type, tag } }).then(r => r.data);
+    // ── Search ────────────────────────────────────────────
+    export const searchItems = (query = '', type = null, tag = null) =>
+      api.get('/items/search', { params: { q: query, type, tag } }).then(r => r.data);
 
-// ── Exams ─────────────────────────────────────────────
-export const getExams = () =>
-  api.get('/exams').then(r => r.data);
+    // ── Exams ─────────────────────────────────────────────
+    export const getExams = () =>
+      api.get('/exams').then(r => r.data);
 
-export const createExam = (data) =>
-  api.post('/exams', data).then(r => r.data);
+    export const createExam = (data) =>
+      api.post('/exams', data).then(r => r.data);
 
-export const updateExam = (id, data) =>
-  api.put(`/exams/${id}`, data).then(r => r.data);
+    export const updateExam = (id, data) =>
+      api.put(`/exams/${id}`, data).then(r => r.data);
 
-export const deleteExam = (id) =>
-  api.delete(`/exams/${id}`);
+    export const deleteExam = (id) =>
+      api.delete(`/exams/${id}`);
 
-export const updateCredentials = (payload) =>
-  api.patch('/auth/me', payload).then(r => r.data);
+    export const updateCredentials = (payload) =>
+      api.patch('/auth/me', payload).then(r => r.data);
 
-export const deleteAccountData = () =>
-  api.delete('/account').then(r => r.data);
+    export const deleteAccountData = () =>
+      api.delete('/account').then(r => r.data);
 
-// ── Stats ─────────────────────────────────────────────
-export const getStats = () =>
-  api.get('/stats').then(r => r.data);
+    // ── Stats ─────────────────────────────────────────────
+    export const getStats = () =>
+      api.get('/stats').then(r => r.data);
 
-export default api;
+    export default api;

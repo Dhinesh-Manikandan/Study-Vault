@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { searchItems, openItemFile, openNoteItem, updateItem } from '../services/api';
+import AddItem from '../components/AddItem/AddItem';
+import { searchItems, openItemFile, openNoteItem } from '../services/api';
 import './Search.css';
 
 const TYPE_META = {
@@ -24,6 +25,7 @@ export default function SearchPage() {
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading]  = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   const doSearch = async (q = query, f = filter, tf = tagFilter) => {
     setLoading(true);
@@ -59,19 +61,8 @@ export default function SearchPage() {
     return text.replace(re, '<mark>$1</mark>');
   };
 
-  const handleEditItem = async (item) => {
-    const nextTitle = window.prompt('Edit item title', item?.title || '');
-    if (nextTitle == null) return;
-    const trimmed = nextTitle.trim();
-    if (!trimmed || trimmed === item?.title) return;
-    try {
-      await updateItem(item.id, { title: trimmed });
-      toast.success('Item updated');
-      doSearch();
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to update item';
-      toast.error(message);
-    }
+  const handleEditItem = (item) => {
+    setEditingItem(item);
   };
 
   return (
@@ -191,6 +182,14 @@ export default function SearchPage() {
           )}
         </div>
       </div>
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={doSearch}
+        />
+      )}
     </div>
   );
 }
