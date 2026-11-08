@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { searchItems, openItemFile, openNoteItem } from '../services/api';
+import { searchItems, openItemFile, openNoteItem, updateItem } from '../services/api';
 import './Search.css';
 
 const TYPE_META = {
@@ -57,6 +57,21 @@ export default function SearchPage() {
     if (!query) return text;
     const re = new RegExp(`(${query})`, 'gi');
     return text.replace(re, '<mark>$1</mark>');
+  };
+
+  const handleEditItem = async (item) => {
+    const nextTitle = window.prompt('Edit item title', item?.title || '');
+    if (nextTitle == null) return;
+    const trimmed = nextTitle.trim();
+    if (!trimmed || trimmed === item?.title) return;
+    try {
+      await updateItem(item.id, { title: trimmed });
+      toast.success('Item updated');
+      doSearch();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update item';
+      toast.error(message);
+    }
   };
 
   return (
@@ -143,6 +158,15 @@ export default function SearchPage() {
                         <div className="result-name">
                           <span dangerouslySetInnerHTML={{ __html: highlight(item.title) }} />
                           {item.starred && <span className="result-star">★</span>}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditItem(item);
+                              }}
+                              style={{ marginLeft: 8, border: '1px solid var(--border)', background: 'var(--surface2)', borderRadius: 5, width: 24, height: 24, cursor: 'pointer' }}
+                              title="Edit item"
+                            >✏</button>
                         </div>
                         <div className="result-path">
                           {item.folderPath} · <span className={`type-badge ${meta.cls}`}>{meta.label}</span>

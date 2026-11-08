@@ -207,6 +207,9 @@ export const getExams = () =>
 export const createExam = (data) =>
   api.post('/exams', data).then(r => r.data);
 
+export const updateExam = (id, data) =>
+  api.put(`/exams/${id}`, data).then(r => r.data);
+
 export const deleteExam = (id) =>
   api.delete(`/exams/${id}`);
 

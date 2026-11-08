@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getStarredItems, toggleStar, openItemFile, openNoteItem } from '../services/api';
+import { getStarredItems, toggleStar, openItemFile, openNoteItem, updateItem } from '../services/api';
 import toast from 'react-hot-toast';
 
 const TYPE_META = {
@@ -28,6 +28,22 @@ export default function StarredPage() {
   const handleUnstar = async (id) => {
     try { await toggleStar(id); load(); toast.success('Unstarred'); }
     catch { toast.error('Failed'); }
+  };
+
+  const handleEditItem = async (item) => {
+    const nextTitle = window.prompt('Edit item title', item?.title || '');
+    if (nextTitle == null) return;
+    const trimmed = nextTitle.trim();
+    if (!trimmed || trimmed === item?.title) return;
+
+    try {
+      await updateItem(item.id, { title: trimmed });
+      toast.success('Item updated');
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update item';
+      toast.error(message);
+    }
   };
 
   return (
@@ -83,6 +99,11 @@ export default function StarredPage() {
                     {item.type === 'NOTE' && item.content && <NotePreview text={item.content} className="starred-note-preview" label="note content" />}
                     {item.notes && <NotePreview text={item.notes} className="starred-note-preview" label="personal note" />}
                   </div>
+                  <button
+                    style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 5, width: 26, height: 26, cursor: 'pointer', color: 'var(--text2)', fontSize: '0.72rem' }}
+                    onClick={e => { e.stopPropagation(); handleEditItem(item); }}
+                    title="Edit"
+                  >✏</button>
                   <button
                     style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 5, width: 26, height: 26, cursor: 'pointer', color: '#f59e0b', fontSize: '0.72rem' }}
                     onClick={e => { e.stopPropagation(); handleUnstar(item.id); }}

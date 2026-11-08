@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem } from '../services/api';
+import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem, updateItem, updateFolder } from '../services/api';
 import './FolderView.css';
 
 const TYPE_META = {
@@ -241,6 +241,38 @@ export default function FolderView() {
     }
   };
 
+  const handleEditFolder = async (targetFolder) => {
+    const nextName = window.prompt('Rename folder', targetFolder?.name || '');
+    if (nextName == null) return;
+    const trimmed = nextName.trim();
+    if (!trimmed || trimmed === targetFolder?.name) return;
+
+    try {
+      await updateFolder(targetFolder.id, { name: trimmed });
+      toast.success('Folder updated');
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update folder';
+      toast.error(message);
+    }
+  };
+
+  const handleEditItem = async (item) => {
+    const nextTitle = window.prompt('Edit item title', item?.title || '');
+    if (nextTitle == null) return;
+    const trimmed = nextTitle.trim();
+    if (!trimmed || trimmed === item?.title) return;
+
+    try {
+      await updateItem(item.id, { title: trimmed });
+      toast.success('Item updated');
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update item';
+      toast.error(message);
+    }
+  };
+
   const filteredItems = items.filter(item => {
     if (filter === 'All')     return true;
     if (filter === 'Starred') return item.starred;
@@ -312,6 +344,7 @@ export default function FolderView() {
             <p className="folder-sub">{subfolders.length} sub-folders · {items.length} items</p>
           </div>
           <div className="folder-actions">
+            <button className="btn btn-ghost" onClick={() => handleEditFolder({ id: Number(id), name: folder?.name || '' })}>✏ Edit Folder</button>
             <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(true)}>🎯 Mark All Revision</button>
             <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(false)}>↩ Remove Revision</button>
             <button className="btn btn-danger" onClick={() => handleDeleteFolder(id, true)}>🗑 Delete Folder</button>
@@ -327,6 +360,15 @@ export default function FolderView() {
             <div className="subfolder-grid">
               {subfolders.map(sf => (
                 <div className="subfolder-card card" key={sf.id} onClick={() => navigate(`/folder/${sf.id}`)}>
+                  <button
+                    className="subfolder-del"
+                    title="Edit folder"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditFolder(sf);
+                    }}
+                    style={{ right: 34 }}
+                  >✏</button>
                   <button
                     className="subfolder-del"
                     title="Delete folder"
@@ -444,6 +486,7 @@ export default function FolderView() {
                     </div>
                   </div>
                   <div className="list-actions" onClick={e => e.stopPropagation()}>
+                    <button className="action-btn" title="Edit" onClick={() => handleEditItem(item)}>✏</button>
                     <button
                       className={`action-btn ${item.starred ? 'starred' : ''}`}
                       title="Star"

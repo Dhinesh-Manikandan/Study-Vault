@@ -13,6 +13,7 @@ const TYPES = [
 
 const TAGS = ['important', 'confusing', 'revision'];
 const MAX_NOTE_WORDS = 2000;
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 const DOC_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx']);
 const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif']);
 
@@ -84,6 +85,11 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
 
   const attachFile = useCallback((fileObj, source = 'upload') => {
     if (!fileObj) return;
+
+    if (fileObj.size > MAX_UPLOAD_BYTES) {
+      toast.error('File is too large. Upload files must be 20 MB or smaller.');
+      return;
+    }
 
     const inferredType = inferTypeFromFile(fileObj);
     if (!inferredType) {
@@ -255,7 +261,7 @@ export default function AddItem({ folderId, folders = [], onClose, onSaved }) {
             >
               <span className="upload-icon">☁️</span>
               <span className="upload-text">{file ? file.name : 'Click, paste, or drag a file here'}</span>
-              <span className="upload-sub">{type === 'PDF' ? 'PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX' : 'JPG, PNG, HEIC'}</span>
+              <span className="upload-sub">{type === 'PDF' ? 'PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX' : 'JPG, PNG, HEIC'} · max 20 MB</span>
               <input
                 type="file"
                 hidden
