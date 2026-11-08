@@ -3,6 +3,7 @@ package com.studyvault.service;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -63,5 +64,34 @@ public class FolderService {
         }
 
         folderRepo.delete(folder);
+    }
+
+    public Folder updateFolder(String userId, Long id, String name) {
+        String nextName = name == null ? "" : name.trim();
+        if (nextName.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Folder name is required");
+        }
+
+        Folder folder = folderRepo.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
+
+        if (!folder.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to edit this folder");
+        }
+
+        Long parentId = folder.getParent() != null ? folder.getParent().getId() : null;
+        List<Folder> siblings = parentId == null
+            ? folderRepo.findByUserIdAndParentIsNullOrderByCreatedAtAsc(userId)
+            : folderRepo.findByUserIdAndParentIdOrderByCreatedAtAsc(userId, parentId);
+
+        boolean duplicateName = siblings.stream()
+            .filter(sibling -> !Objects.equals(sibling.getId(), id))
+            .anyMatch(sibling -> sibling.getName() != null && sibling.getName().trim().equalsIgnoreCase(nextName));
+        if (duplicateName) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A folder with this name already exists here");
+        }
+
+        folder.setName(nextName);
+        return folderRepo.save(folder);
     }
 }

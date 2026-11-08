@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import { useAuth } from '../context/AuthContext';
-import { getStats, getRecentItems, getExams, getFolders, createFolder, createExam, deleteExam, deleteFolder } from '../services/api';
+import { getStats, getRecentItems, getExams, getFolders, createFolder, createExam, deleteExam, deleteFolder, updateFolder, updateExam } from '../services/api';
 import { format } from 'date-fns';
 import './Dashboard.css';
 
@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   // New folder modal
   const [showNewFolder, setShowNewFolder]   = useState(false);
@@ -84,6 +85,21 @@ export default function Dashboard() {
     try { await deleteExam(id); load(); } catch { toast.error('Failed'); }
   };
 
+  const handleEditExam = async (exam) => {
+    const subject = window.prompt('Edit exam subject', exam?.subject || '');
+    if (subject == null) return;
+    const trimmed = subject.trim();
+    if (!trimmed || trimmed === exam?.subject) return;
+    try {
+      await updateExam(exam.id, { subject: trimmed });
+      toast.success('Exam updated');
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update exam';
+      toast.error(message);
+    }
+  };
+
   const handleDeleteFolder = async (id) => {
     if (!window.confirm('Delete this folder and all its contents?')) return;
     try {
@@ -94,6 +110,25 @@ export default function Dashboard() {
       const message = error?.response?.data?.message || 'Failed to delete folder';
       toast.error(message);
     }
+  };
+
+  const handleEditFolder = async (folder) => {
+    const nextName = window.prompt('Rename folder', folder?.name || '');
+    if (nextName == null) return;
+    const trimmed = nextName.trim();
+    if (!trimmed || trimmed === folder?.name) return;
+    try {
+      await updateFolder(folder.id, { name: trimmed });
+      toast.success('Folder updated');
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update folder';
+      toast.error(message);
+    }
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
   };
 
   const getExamDateTime = (exam) => {
@@ -243,6 +278,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <button className="exam-del" onClick={() => handleDeleteExam(exam.id)}>✕</button>
+                      <button className="exam-del" style={{ right: 34 }} onClick={() => handleEditExam(exam)} title="Edit exam">✏</button>
                     </div>
                   );
                 })}
@@ -279,6 +315,15 @@ export default function Dashboard() {
             <div className="folder-grid">
               {folders.map(f => (
                 <div className="folder-card card" key={f.id} onClick={() => navigate(`/folder/${f.id}`)}>
+                  <button
+                    className="folder-del"
+                    title="Edit folder"
+                    style={{ right: 34 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditFolder(f);
+                    }}
+                  >✏</button>
                   <button
                     className="folder-del"
                     title="Delete folder"
@@ -338,6 +383,15 @@ export default function Dashboard() {
                     }}
                   >
                     {item.starred && <span className="item-star">★</span>}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditItem(item);
+                      }}
+                      style={{ position: 'absolute', top: 8, right: 8, border: '1px solid var(--border)', background: 'var(--surface2)', borderRadius: 6, width: 26, height: 26, cursor: 'pointer' }}
+                      title="Edit item"
+                    >✏</button>
                     <span className={`type-badge ${meta.cls}`}>{meta.icon} {meta.label}</span>
                     <div className="item-name">{item.title}</div>
                     <div className="item-path">{item.folderPath}</div>
@@ -354,6 +408,15 @@ export default function Dashboard() {
         <AddItem
           folders={flatFolders}
           onClose={() => setShowAdd(false)}
+          onSaved={load}
+        />
+      )}
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          folders={flatFolders}
+          onClose={() => setEditingItem(null)}
           onSaved={load}
         />
       )}

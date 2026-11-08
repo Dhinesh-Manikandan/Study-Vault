@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,12 +53,15 @@ public class ItemController {
 
     @GetMapping("/search")
     public ResponseEntity<?> search(Authentication auth,
-                                    @RequestParam(required = false) String q,
-                                    @RequestParam(required = false) String type,
-                                    @RequestParam(required = false) String tag) {
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String tag) {
         Item.Type t = null;
         if (type != null && !type.isBlank()) {
-            try { t = Item.Type.valueOf(type.toUpperCase()); } catch (IllegalArgumentException ignored) {}
+            try {
+                t = Item.Type.valueOf(type.toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
         }
         return ResponseEntity.ok(itemService.search(auth.getName(), q, t, tag));
     }
@@ -72,19 +76,34 @@ public class ItemController {
         }
     }
 
-    @PostMapping("/upload")
-    public ResponseEntity<?> uploadItem(
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateItem(Authentication auth,
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.ok(itemService.updateItem(auth.getName(), id, body));
+        } catch (ResponseStatusException ex) {
+            String message = ex.getReason() != null ? ex.getReason() : "Failed to update item";
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
+        }
+    }
+
+    @RequestMapping(value = "/{id}/upload", method = { org.springframework.web.bind.annotation.RequestMethod.PUT,
+            org.springframework.web.bind.annotation.RequestMethod.POST })
+    public ResponseEntity<?> updateItemUpload(
             Authentication auth,
-            @RequestParam("file")     MultipartFile file,
-            @RequestParam("title")    String title,
+            @PathVariable Long id,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("title") String title,
             @RequestParam("folderId") Long folderId,
-            @RequestParam("type")     String type,
-            @RequestParam(value = "tags",  required = false) String tags,
+            @RequestParam("type") String type,
+            @RequestParam(value = "tags", required = false) String tags,
             @RequestParam(value = "notes", required = false) String notes,
             @RequestParam(value = "examId", required = false) Long examId) throws Exception {
 
         List<String> tagList = (tags != null && !tags.isBlank())
-            ? Arrays.asList(tags.split(",")) : List.of();
+                ? Arrays.asList(tags.split(","))
+                : List.of();
 
         Item.Type itemType;
         try {
@@ -95,9 +114,40 @@ public class ItemController {
 
         try {
             return ResponseEntity.ok(
-                itemService.uploadItem(auth.getName(), file, title, folderId,
-                    itemType, tagList, notes, examId)
-            );
+                    itemService.updateItemWithFile(auth.getName(), id, file, title, folderId,
+                            itemType, tagList, notes, examId));
+        } catch (ResponseStatusException ex) {
+            String message = ex.getReason() != null ? ex.getReason() : "Failed to update item";
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
+        }
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadItem(
+            Authentication auth,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam("folderId") Long folderId,
+            @RequestParam("type") String type,
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(value = "notes", required = false) String notes,
+            @RequestParam(value = "examId", required = false) Long examId) throws Exception {
+
+        List<String> tagList = (tags != null && !tags.isBlank())
+                ? Arrays.asList(tags.split(","))
+                : List.of();
+
+        Item.Type itemType;
+        try {
+            itemType = Item.Type.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid item type");
+        }
+
+        try {
+            return ResponseEntity.ok(
+                    itemService.uploadItem(auth.getName(), file, title, folderId,
+                            itemType, tagList, notes, examId));
         } catch (ResponseStatusException ex) {
             String message = ex.getReason() != null ? ex.getReason() : "Failed to upload item";
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
@@ -111,34 +161,33 @@ public class ItemController {
 
     @PatchMapping("/{id}/tags")
     public ResponseEntity<?> updateTags(Authentication auth,
-                                        @PathVariable Long id,
-                                        @RequestBody Map<String, Object> body) {
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
         Object tagsRaw = body.get("tags");
         boolean hasExamId = body.containsKey("examId");
         Long examId = parseExamId(body.get("examId"));
         List<String> tags = tagsRaw instanceof List<?> rawList
-            ? rawList.stream().map(String::valueOf).toList()
-            : List.of();
+                ? rawList.stream().map(String::valueOf).toList()
+                : List.of();
         try {
             Item updated = itemService.updateTags(auth.getName(), id, tags, examId, hasExamId);
             return ResponseEntity.ok(Map.of(
-                "id", updated.getId(),
-                "tags", updated.getTags() != null ? updated.getTags() : List.of(),
-                "examId", updated.getExamId()
-            ));
+                    "id", updated.getId(),
+                    "tags", updated.getTags() != null ? updated.getTags() : List.of(),
+                    "examId", updated.getExamId()));
         } catch (ResponseStatusException ex) {
             String message = ex.getReason() != null ? ex.getReason() : "Failed to update tags";
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("message", "Failed to update tags"));
+                    .body(Map.of("message", "Failed to update tags"));
         }
     }
 
     @PatchMapping("/{id}/move")
     public ResponseEntity<?> moveItem(Authentication auth,
-                                      @PathVariable Long id,
-                                      @RequestBody Map<String, Object> body) {
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
         Object folderIdRaw = body.get("folderId");
         if (folderIdRaw == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Destination folder is required"));
@@ -159,14 +208,14 @@ public class ItemController {
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("message", "Failed to move item"));
+                    .body(Map.of("message", "Failed to move item"));
         }
     }
 
     @PatchMapping("/folders/{folderId}/revision")
     public ResponseEntity<?> updateFolderRevision(Authentication auth,
-                                                   @PathVariable Long folderId,
-                                                   @RequestBody Map<String, Object> body) {
+            @PathVariable Long folderId,
+            @RequestBody Map<String, Object> body) {
         Object enabledRaw = body.get("enabled");
         boolean enabled = enabledRaw == null || Boolean.parseBoolean(String.valueOf(enabledRaw));
 
@@ -177,7 +226,7 @@ public class ItemController {
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("message", "Failed to update folder revision"));
+                    .body(Map.of("message", "Failed to update folder revision"));
         }
     }
 

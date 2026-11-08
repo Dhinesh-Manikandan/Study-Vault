@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
+import AddItem from '../components/AddItem/AddItem';
 import { getRevisionItems, getExams, openItemFile, openNoteItem } from '../services/api';
 import './Revision.css';
 
 export default function RevisionPage() {
   const [revisionItems, setRevisionItems] = useState([]);
   const [exams, setExams] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
     Promise.allSettled([getRevisionItems(), getExams()]).then(([itemsRes, examsRes]) => {
@@ -22,6 +24,10 @@ export default function RevisionPage() {
 
   const getExamRevisionItems = (examId) =>
     revisionItems.filter(item => String(item.examId || '') === String(examId || ''));
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+  };
 
   return (
     <div className="app-layout">
@@ -94,6 +100,14 @@ export default function RevisionPage() {
                     <div className="revision-card-top">
                       <div className="revision-kind">{item.type}</div>
                       <span className="revision-badge">#revision</span>
+                      <button
+                        type="button"
+                        className="revision-open-btn"
+                        style={{ marginLeft: 'auto' }}
+                        onClick={() => handleEditItem(item)}
+                      >
+                        Edit
+                      </button>
                     </div>
 
                     <div className="revision-title">{item.title}</div>
@@ -143,6 +157,17 @@ export default function RevisionPage() {
           )}
         </div>
       </div>
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={async () => {
+            const refreshed = await getRevisionItems();
+            setRevisionItems(Array.isArray(refreshed) ? refreshed : []);
+          }}
+        />
+      )}
     </div>
   );
 }

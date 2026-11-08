@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
 import NotePreview from '../components/NotePreview/NotePreview';
-import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem } from '../services/api';
+import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem, updateFolder } from '../services/api';
 import './FolderView.css';
 
 const TYPE_META = {
@@ -37,6 +37,7 @@ export default function FolderView() {
   const [items,       setItems]       = useState([]);
   const [filter,      setFilter]      = useState('All');
   const [showAdd,     setShowAdd]     = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [showNewSub,  setShowNewSub]  = useState(false);
   const [newSubName,  setNewSubName]  = useState('');
   const [allFolders,  setAllFolders]  = useState([]);
@@ -241,6 +242,26 @@ export default function FolderView() {
     }
   };
 
+  const handleEditFolder = async (targetFolder) => {
+    const nextName = window.prompt('Rename folder', targetFolder?.name || '');
+    if (nextName == null) return;
+    const trimmed = nextName.trim();
+    if (!trimmed || trimmed === targetFolder?.name) return;
+
+    try {
+      await updateFolder(targetFolder.id, { name: trimmed });
+      toast.success('Folder updated');
+      load();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to update folder';
+      toast.error(message);
+    }
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+  };
+
   const filteredItems = items.filter(item => {
     if (filter === 'All')     return true;
     if (filter === 'Starred') return item.starred;
@@ -312,6 +333,7 @@ export default function FolderView() {
             <p className="folder-sub">{subfolders.length} sub-folders · {items.length} items</p>
           </div>
           <div className="folder-actions">
+            <button className="btn btn-ghost" onClick={() => handleEditFolder({ id: Number(id), name: folder?.name || '' })}>✏ Edit Folder</button>
             <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(true)}>🎯 Mark All Revision</button>
             <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(false)}>↩ Remove Revision</button>
             <button className="btn btn-danger" onClick={() => handleDeleteFolder(id, true)}>🗑 Delete Folder</button>
@@ -327,6 +349,15 @@ export default function FolderView() {
             <div className="subfolder-grid">
               {subfolders.map(sf => (
                 <div className="subfolder-card card" key={sf.id} onClick={() => navigate(`/folder/${sf.id}`)}>
+                  <button
+                    className="subfolder-del"
+                    title="Edit folder"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditFolder(sf);
+                    }}
+                    style={{ right: 34 }}
+                  >✏</button>
                   <button
                     className="subfolder-del"
                     title="Delete folder"
@@ -444,6 +475,7 @@ export default function FolderView() {
                     </div>
                   </div>
                   <div className="list-actions" onClick={e => e.stopPropagation()}>
+                    <button className="action-btn" title="Edit" onClick={() => handleEditItem(item)}>✏</button>
                     <button
                       className={`action-btn ${item.starred ? 'starred' : ''}`}
                       title="Star"
@@ -463,6 +495,16 @@ export default function FolderView() {
           folderId={id}
           folders={allFolders}
           onClose={() => setShowAdd(false)}
+          onSaved={load}
+        />
+      )}
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          folderId={editingItem.folderId || id}
+          folders={allFolders}
+          onClose={() => setEditingItem(null)}
           onSaved={load}
         />
       )}

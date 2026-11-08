@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import NotePreview from '../components/NotePreview/NotePreview';
+import AddItem from '../components/AddItem/AddItem';
 import { searchItems, openItemFile, openNoteItem } from '../services/api';
 import './Search.css';
 
@@ -24,6 +25,7 @@ export default function SearchPage() {
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading]  = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   const doSearch = async (q = query, f = filter, tf = tagFilter) => {
     setLoading(true);
@@ -57,6 +59,10 @@ export default function SearchPage() {
     if (!query) return text;
     const re = new RegExp(`(${query})`, 'gi');
     return text.replace(re, '<mark>$1</mark>');
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
   };
 
   return (
@@ -143,6 +149,15 @@ export default function SearchPage() {
                         <div className="result-name">
                           <span dangerouslySetInnerHTML={{ __html: highlight(item.title) }} />
                           {item.starred && <span className="result-star">★</span>}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditItem(item);
+                              }}
+                              style={{ marginLeft: 8, border: '1px solid var(--border)', background: 'var(--surface2)', borderRadius: 5, width: 24, height: 24, cursor: 'pointer' }}
+                              title="Edit item"
+                            >✏</button>
                         </div>
                         <div className="result-path">
                           {item.folderPath} · <span className={`type-badge ${meta.cls}`}>{meta.label}</span>
@@ -167,6 +182,14 @@ export default function SearchPage() {
           )}
         </div>
       </div>
+
+      {editingItem && (
+        <AddItem
+          itemToEdit={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={doSearch}
+        />
+      )}
     </div>
   );
 }
