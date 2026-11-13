@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
+import MoveFolderModal from '../components/MoveFolderModal/MoveFolderModal';
 import { useAuth } from '../context/AuthContext';
 import { getStats, getRecentItems, getExams, getFolders, createFolder, createExam, deleteExam, deleteFolder, updateFolder, updateExam } from '../services/api';
 import { format } from 'date-fns';
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [movingFolder, setMovingFolder] = useState(null);
 
   // New folder modal
   const [showNewFolder, setShowNewFolder]   = useState(false);
@@ -317,6 +319,15 @@ export default function Dashboard() {
                 <div className="folder-card card" key={f.id} onClick={() => navigate(`/folder/${f.id}`)}>
                   <button
                     className="folder-del"
+                    title="Move folder"
+                    style={{ right: 60 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMovingFolder(f);
+                    }}
+                  >📦</button>
+                  <button
+                    className="folder-del"
                     title="Edit folder"
                     style={{ right: 34 }}
                     onClick={(e) => {
@@ -466,6 +477,18 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {movingFolder && (
+        <MoveFolderModal
+          folder={movingFolder}
+          folders={folders}
+          onClose={() => setMovingFolder(null)}
+          onMoved={() => {
+            setMovingFolder(null);
+            load();
+          }}
+        />
       )}
     </div>
   );

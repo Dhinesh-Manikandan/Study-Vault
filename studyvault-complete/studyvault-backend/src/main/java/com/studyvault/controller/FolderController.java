@@ -3,10 +3,12 @@ package com.studyvault.controller;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -51,6 +53,33 @@ public class FolderController {
                                           @RequestBody Map<String, Object> body) {
         String name = body.get("name") != null ? String.valueOf(body.get("name")) : "";
         return ResponseEntity.ok(folderService.updateFolder(auth.getName(), id, name));
+    }
+
+    @PatchMapping("/{id}/move")
+    public ResponseEntity<?> moveFolder(Authentication auth,
+                                        @PathVariable Long id,
+                                        @RequestBody Map<String, Object> body) {
+        Object parentIdRaw = body.get("parentId");
+        Long parentId = null;
+        if (parentIdRaw != null) {
+            String str = parentIdRaw.toString().trim();
+            if (!str.isEmpty() && !str.equalsIgnoreCase("null") && !str.equals("0")) {
+                try {
+                    parentId = Long.valueOf(str);
+                } catch (NumberFormatException ex) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Invalid destination folder"));
+                }
+            }
+        }
+        try {
+            return ResponseEntity.ok(folderService.moveFolder(auth.getName(), id, parentId));
+        } catch (ResponseStatusException ex) {
+            String message = ex.getReason() != null ? ex.getReason() : "Failed to move folder";
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Failed to move folder"));
+        }
     }
 
     @DeleteMapping("/{id}")

@@ -8,6 +8,8 @@ const normalizeUser = (user) => ({
   username: user?.username || user?.email || '',
   email: user?.email || user?.username || '',
   displayName: user?.displayName || user?.username || user?.email || '',
+  createdAt: user?.createdAt || null,
+  updatedAt: user?.updatedAt || null,
   user_metadata: { full_name: user?.displayName || user?.username || user?.email || '' },
 });
 

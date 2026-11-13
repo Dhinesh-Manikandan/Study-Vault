@@ -1,0 +1,157 @@
+.ui-dropdown-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ui-dropdown-trigger {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 
+ * Dropdown Content:
+ * Mounted to document.body via createPortal with max z-index (2147483647).
+ * Completely immune to container clipping, overflow:hidden, or stacking traps.
+ */
+.ui-dropdown-content {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  min-width: 216px;
+  max-width: calc(100vw - 24px);
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  background: var(--surface) !important;
+  color: var(--text);
+  padding: 0.4rem;
+  box-shadow: 0 20px 48px -4px rgba(0, 0, 0, 0.28),
+              0 10px 22px -2px rgba(0, 0, 0, 0.14),
+              0 0 0 1px rgba(0, 0, 0, 0.06);
+  animation: uiDropdownIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom left;
+  isolation: isolate;
+  outline: none;
+  overflow: hidden;
+}
+
+/* Animations */
+@keyframes uiDropdownIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Positioning Sides */
+.ui-dropdown-side-top {
+  bottom: calc(100% + 8px);
+}
+
+.ui-dropdown-side-bottom {
+  top: calc(100% + 8px);
+}
+
+/* Alignments */
+.ui-dropdown-align-end {
+  right: 0;
+}
+
+.ui-dropdown-align-start {
+  left: 0;
+}
+
+.ui-dropdown-align-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Groups and Labels */
+.ui-dropdown-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ui-dropdown-label {
+  padding: 0.4rem 0.65rem 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+/* Items */
+.ui-dropdown-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 7px;
+  padding: 0.48rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: all 0.12s ease;
+}
+
+.ui-dropdown-item:hover,
+.ui-dropdown-item:focus {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.ui-dropdown-item.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.ui-dropdown-item-destructive {
+  color: var(--red);
+}
+
+.ui-dropdown-item-destructive:hover,
+.ui-dropdown-item-destructive:focus {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* Separator */
+.ui-dropdown-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 0.32rem -0.4rem;
+}
+
+/* Dark mode adjustments - ultra crisp border and deep elevation */
+html[data-theme="dark"] .ui-dropdown-content {
+  background: var(--surface) !important;
+  border: 1px solid var(--border2);
+  box-shadow: 0 24px 56px -4px rgba(0, 0, 0, 0.75),
+              0 12px 28px -2px rgba(0, 0, 0, 0.5),
+              0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .ui-dropdown-item:hover,
+html[data-theme="dark"] .ui-dropdown-item:focus {
+  background: var(--surface2);
+}
+
+html[data-theme="dark"] .ui-dropdown-item-destructive:hover,
+html[data-theme="dark"] .ui-dropdown-item-destructive:focus {
+  background: rgba(248, 113, 113, 0.16);
+}
+

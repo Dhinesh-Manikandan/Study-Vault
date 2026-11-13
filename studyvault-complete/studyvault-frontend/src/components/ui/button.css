@@ -1,0 +1,96 @@
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  outline: none;
+  user-select: none;
+  padding: 0.45rem 0.85rem;
+}
+
+.ui-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ui-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Variants */
+.ui-btn-default {
+  background: var(--accent);
+  color: #ffffff;
+}
+.ui-btn-default:hover {
+  background: var(--accent-hover);
+}
+
+.ui-btn-outline {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.ui-btn-outline:hover {
+  background: var(--surface2);
+  border-color: var(--border2);
+}
+
+.ui-btn-ghost {
+  background: transparent;
+  color: var(--text2);
+}
+.ui-btn-ghost:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.ui-btn-secondary {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.ui-btn-secondary:hover {
+  background: color-mix(in srgb, var(--surface2) 80%, var(--surface) 20%);
+}
+
+.ui-btn-danger,
+.ui-btn-destructive {
+  background: var(--red-bg);
+  color: var(--red);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+.ui-btn-danger:hover,
+.ui-btn-destructive:hover {
+  background: rgba(220, 38, 38, 0.18);
+}
+
+/* Sizes */
+.ui-btn-sm {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  border-radius: 6px;
+}
+
+.ui-btn-lg {
+  padding: 0.6rem 1.15rem;
+  font-size: 0.9rem;
+  border-radius: 10px;
+}
+
+.ui-btn-icon {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 7px;
+}
+
