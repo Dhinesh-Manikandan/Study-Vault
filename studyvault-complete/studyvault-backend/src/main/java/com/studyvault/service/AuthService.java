@@ -176,6 +176,8 @@ public class AuthService {
         payload.put("username", safeUsername);
         payload.put("email", safeUsername);
         payload.put("displayName", safeDisplayName);
+        payload.put("createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : null);
+        payload.put("updatedAt", user.getUpdatedAt() != null ? user.getUpdatedAt().toString() : null);
         return payload;
     }
 

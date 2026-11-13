@@ -94,4 +94,59 @@ public class FolderService {
         folder.setName(nextName);
         return folderRepo.save(folder);
     }
+
+    public Folder moveFolder(String userId, Long id, Long parentId) {
+        Folder folder = folderRepo.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
+
+        if (!userId.equals(folder.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to move this folder");
+        }
+
+        Long currentParentId = folder.getParent() != null ? folder.getParent().getId() : null;
+        if (Objects.equals(currentParentId, parentId)) {
+            return folder;
+        }
+
+        if (parentId == null) {
+            boolean duplicateName = folderRepo.findByUserIdAndParentIsNullOrderByCreatedAtAsc(userId).stream()
+                .filter(sibling -> !Objects.equals(sibling.getId(), id))
+                .anyMatch(sibling -> sibling.getName() != null && sibling.getName().trim().equalsIgnoreCase(folder.getName().trim()));
+            if (duplicateName) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "A folder with this name already exists at the root level");
+            }
+            folder.setParent(null);
+        } else {
+            if (parentId.equals(id)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A folder cannot be moved into itself");
+            }
+
+            Folder destination = folderRepo.findById(parentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination folder not found"));
+
+            if (!userId.equals(destination.getUserId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot move folders into this destination");
+            }
+
+            // Circular cycle prevention: destination cannot be a descendant of folder
+            Folder current = destination;
+            while (current != null) {
+                if (current.getId().equals(id)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move a folder into one of its sub-folders");
+                }
+                current = current.getParent();
+            }
+
+            boolean duplicateName = folderRepo.findByUserIdAndParentIdOrderByCreatedAtAsc(userId, parentId).stream()
+                .filter(sibling -> !Objects.equals(sibling.getId(), id))
+                .anyMatch(sibling -> sibling.getName() != null && sibling.getName().trim().equalsIgnoreCase(folder.getName().trim()));
+            if (duplicateName) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "A folder named '" + folder.getName() + "' already exists in the destination folder");
+            }
+
+            folder.setParent(destination);
+        }
+
+        return folderRepo.save(folder);
+    }
 }

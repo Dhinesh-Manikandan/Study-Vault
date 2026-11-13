@@ -51,6 +51,9 @@ export const createFolder = (data) =>
 export const updateFolder = (id, data) =>
   api.put(`/folders/${id}`, data).then(r => r.data);
 
+export const moveFolder = (id, parentId) =>
+  api.patch(`/folders/${id}/move`, { parentId: parentId ? Number(parentId) : null }).then(r => r.data);
+
 export const deleteFolder = (id) =>
   api.delete(`/folders/${id}`);
 

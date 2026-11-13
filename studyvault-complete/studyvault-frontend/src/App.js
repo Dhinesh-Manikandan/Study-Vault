@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -50,24 +51,36 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              fontFamily: 'Plus Jakarta Sans, sans-serif',
-              fontSize: '13px',
-              borderRadius: '10px',
-              border: '1px solid #e8e5e0',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            },
-            success: { iconTheme: { primary: '#16a34a', secondary: '#fff' } },
-            error:   { iconTheme: { primary: '#dc2626', secondary: '#fff' } },
-          }}
-        />
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <ThemedToaster />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
+function ThemedToaster() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  return (
+    <Toaster
+      position="bottom-right"
+      toastOptions={{
+        style: {
+          fontFamily: 'Plus Jakarta Sans, sans-serif',
+          fontSize: '13px',
+          borderRadius: '10px',
+          border: `1px solid ${isDark ? '#3a3632' : '#e8e5e0'}`,
+          boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.08)',
+          background: isDark ? '#2a2724' : '#ffffff',
+          color: isDark ? '#e8e3dc' : '#1c1917',
+        },
+        success: { iconTheme: { primary: '#16a34a', secondary: isDark ? '#2a2724' : '#fff' } },
+        error:   { iconTheme: { primary: '#dc2626', secondary: isDark ? '#2a2724' : '#fff' } },
+      }}
+    />
   );
 }

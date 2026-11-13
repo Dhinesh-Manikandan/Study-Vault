@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar/Sidebar';
 import AddItem from '../components/AddItem/AddItem';
+import MoveFolderModal from '../components/MoveFolderModal/MoveFolderModal';
 import NotePreview from '../components/NotePreview/NotePreview';
 import { getFolders, getItems, getExams, deleteItem, toggleStar, createFolder, deleteFolder, openItemFile, openNoteItem, updateItemTags, updateFolderRevision, moveItem, updateFolder } from '../services/api';
 import './FolderView.css';
@@ -41,6 +42,8 @@ export default function FolderView() {
   const [showNewSub,  setShowNewSub]  = useState(false);
   const [newSubName,  setNewSubName]  = useState('');
   const [allFolders,  setAllFolders]  = useState([]);
+  const [foldersTree, setFoldersTree] = useState([]);
+  const [movingFolder, setMovingFolder] = useState(null);
   const [exams,       setExams]       = useState([]);
   const [loading,     setLoading]     = useState(true);
   const lastLoadToastRef = useRef({ key: '', at: 0 });
@@ -83,6 +86,7 @@ export default function FolderView() {
     setItems(its);
     setExams(exs);
     setAllFolders(flat.map(f => ({ id: f.id, name: f.name, path: f.path || f.name })));
+    setFoldersTree(all);
 
     if (foldersResult.status === 'rejected' && itemsResult.status === 'rejected') {
       const message = foldersResult.reason?.response?.data?.message
@@ -333,6 +337,7 @@ export default function FolderView() {
             <p className="folder-sub">{subfolders.length} sub-folders · {items.length} items</p>
           </div>
           <div className="folder-actions">
+            <button className="btn btn-ghost" onClick={() => setMovingFolder({ id: Number(id), name: folder?.name || '' })}>📦 Move Folder</button>
             <button className="btn btn-ghost" onClick={() => handleEditFolder({ id: Number(id), name: folder?.name || '' })}>✏ Edit Folder</button>
             <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(true)}>🎯 Mark All Revision</button>
             <button className="btn btn-ghost btn-revision" onClick={() => handleFolderRevision(false)}>↩ Remove Revision</button>
@@ -349,6 +354,15 @@ export default function FolderView() {
             <div className="subfolder-grid">
               {subfolders.map(sf => (
                 <div className="subfolder-card card" key={sf.id} onClick={() => navigate(`/folder/${sf.id}`)}>
+                  <button
+                    className="subfolder-del"
+                    title="Move folder"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMovingFolder(sf);
+                    }}
+                    style={{ right: 60 }}
+                  >📦</button>
                   <button
                     className="subfolder-del"
                     title="Edit folder"
@@ -506,6 +520,18 @@ export default function FolderView() {
           folders={allFolders}
           onClose={() => setEditingItem(null)}
           onSaved={load}
+        />
+      )}
+
+      {movingFolder && (
+        <MoveFolderModal
+          folder={movingFolder}
+          folders={foldersTree}
+          onClose={() => setMovingFolder(null)}
+          onMoved={() => {
+            setMovingFolder(null);
+            load();
+          }}
         />
       )}
 
