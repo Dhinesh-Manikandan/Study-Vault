@@ -129,12 +129,6 @@ export default function ProfilePage() {
     }
   }, [user?.createdAt]);
 
-  const copyAccountId = () => {
-    if (!user?.id) return;
-    navigator.clipboard.writeText(user.id);
-    toast.success('Account ID copied to clipboard');
-  };
-
   const handleUpdateCredentials = async (e) => {
     e.preventDefault();
 
@@ -264,28 +258,8 @@ export default function ProfilePage() {
                 <span className="profile-dot">·</span>
                 <span className="profile-member-date">{memberSince}</span>
               </div>
-              {/* <div className="profile-id-row">
-                        <span className="profile-id-label">Vault ID:</span>
-                        <code className="profile-id-code">{user?.id || '—'}</code>
-                        <button
-                          type="button"
-                          className="profile-copy-btn"
-                          onClick={copyAccountId}
-                          title="Copy Account ID"
-                        >
-                          📋 Copy
-                        </button>
-                      </div> */}
             </div>
           </div>
-
-          {/* <div className="profile-hero-right">
-            <div className="profile-security-badge-box">
-              <div className="profile-badge-title">🛡️ Account Security</div>
-              <div className="profile-badge-desc">BCrypt Hash + JWT Auth</div>
-              <div className="profile-badge-sub">Cloud Synced &amp; Isolated</div>
-            </div>
-          </div> */}
         </div>
 
         {/* Vault Learning Analytics */}
